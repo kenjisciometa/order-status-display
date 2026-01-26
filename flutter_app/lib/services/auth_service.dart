@@ -1,0 +1,322 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import '../models/user.dart';
+import '../models/auth_state.dart';
+import '../models/osd_display.dart';
+import '../config/api_endpoints.dart';
+import 'api_client_service.dart';
+import 'settings_service.dart';
+
+/// Authentication service for OSD (Order Status Display)
+/// Handles login, logout, session management, and display fetching
+class AuthService extends ChangeNotifier {
+  static AuthService? _instance;
+  static AuthService get instance {
+    _instance ??= AuthService._internal();
+    return _instance!;
+  }
+
+  AuthService._internal();
+
+  final ApiClientService _apiClient = ApiClientService.instance;
+
+  AuthState _currentState = const AuthState.unknown();
+  User? _currentUser;
+  List<OsdDisplay> _availableDisplays = [];
+  OsdDisplay? _selectedDisplay;
+
+  /// Current authentication state
+  AuthState get currentState => _currentState;
+
+  /// Current authenticated user
+  User? get currentUser => _currentUser;
+
+  /// Available OSD displays for the user
+  List<OsdDisplay> get availableDisplays => _availableDisplays;
+
+  /// Selected OSD display
+  OsdDisplay? get selectedDisplay => _selectedDisplay;
+
+  void _updateState(AuthState newState) {
+    if (_currentState != newState) {
+      _currentState = newState;
+      notifyListeners();
+    }
+  }
+
+  /// Initialize the auth service
+  /// Check for stored credentials and auto-login if enabled
+  Future<void> initialize() async {
+    try {
+      await _apiClient.initialize();
+
+      // Check if auto-login is enabled
+      final autoLoginEnabled = await _apiClient.isAutoLoginEnabled();
+      if (!autoLoginEnabled) {
+        debugPrint('🔐 [OSD AUTH] Auto-login disabled, showing login screen');
+        _updateState(const AuthState.unauthenticated());
+        return;
+      }
+
+      // Check for stored credentials
+      final email = await _apiClient.getStoredEmail();
+      final password = await _apiClient.getStoredPassword();
+
+      if (email != null && password != null) {
+        debugPrint(
+            '🔐 [OSD AUTH] Found stored credentials, attempting auto-login');
+        await signInWithEmailPassword(
+            email: email, password: password, autoLogin: true);
+      } else {
+        // Check for existing token
+        final token = await _apiClient.getAuthToken();
+        if (token != null) {
+          debugPrint('🔐 [OSD AUTH] Found stored token, validating...');
+          final isValid = await _validateToken();
+          if (isValid) {
+            debugPrint('✅ [OSD AUTH] Token valid, session restored');
+            return;
+          }
+        }
+        _updateState(const AuthState.unauthenticated());
+      }
+    } catch (e) {
+      debugPrint('❌ [OSD AUTH] Initialization error: $e');
+      _updateState(const AuthState.unauthenticated());
+    }
+  }
+
+  /// Validate stored token
+  Future<bool> _validateToken() async {
+    try {
+      final response =
+          await _apiClient.get<Map<String, dynamic>>(ApiEndpoints.profile);
+
+      if (response.success && response.data != null) {
+        final userData = response.data!['user'] as Map<String, dynamic>?;
+        if (userData != null) {
+          _currentUser = User.fromJson(userData);
+          _updateState(AuthState.authenticated(_currentUser!));
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('❌ [OSD AUTH] Token validation error: $e');
+      return false;
+    }
+  }
+
+  /// Sign in with email and password
+  Future<AuthState> signInWithEmailPassword({
+    required String email,
+    required String password,
+    bool rememberMe = false,
+    bool autoLogin = false,
+  }) async {
+    try {
+      if (!autoLogin) {
+        _updateState(const AuthState.loading());
+      }
+
+      debugPrint('🔐 [OSD AUTH] Attempting login with email: $email');
+
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        ApiEndpoints.signIn,
+        data: {
+          'email': email,
+          'password': password,
+          'deviceId': _apiClient.deviceId ?? 'osd_device',
+        },
+      );
+
+      debugPrint('🔐 [OSD AUTH] Login response success: ${response.success}');
+
+      if (response.success && response.data != null) {
+        final data = response.data!;
+
+        // Extract session and user data
+        final sessionData = data['session'] as Map<String, dynamic>?;
+        final userProfileData = data['user'] as Map<String, dynamic>?;
+
+        if (sessionData != null && userProfileData != null) {
+          final accessToken = sessionData['access_token'] as String?;
+          final refreshToken = sessionData['refresh_token'] as String?;
+
+          if (accessToken != null) {
+            // Store the API tokens
+            await _apiClient.setAuthToken(accessToken, refreshToken);
+
+            // Handle remember me / auto-login
+            if (rememberMe && !autoLogin) {
+              await _apiClient.setAutoLoginEnabled(true);
+              await _apiClient.storeCredentials(email, password);
+              debugPrint('💾 [OSD AUTH] Credentials stored for auto-login');
+            }
+
+            // Create user object
+            _currentUser = User.fromJson(userProfileData);
+            final authState = AuthState.authenticated(_currentUser!);
+            _updateState(authState);
+
+            debugPrint(
+                '✅ [OSD AUTH] Login successful for user: ${_currentUser!.email}');
+            return authState;
+          }
+        }
+      }
+
+      final serverError =
+          response.data?['error'] ?? response.message ?? 'Authentication failed';
+      debugPrint('❌ [OSD AUTH] Login failed: $serverError');
+
+      // Check for rate limit error
+      final isRateLimited = response.statusCode == 429 ||
+          response.meta?['rate_limit_error'] == true ||
+          serverError.toLowerCase().contains('rate limit');
+
+      String errorMessage;
+      if (isRateLimited) {
+        final retryAfter = response.meta?['retry_after'] as int? ?? 60;
+        errorMessage =
+            'Too many login attempts. Please try again in $retryAfter seconds.';
+      } else {
+        // Security best practice: Don't reveal whether email or password was incorrect
+        errorMessage =
+            'Invalid email or password. Please check your credentials and try again.';
+      }
+
+      final authState = AuthState.unauthenticated(errorMessage);
+      _updateState(authState);
+      return authState;
+    } catch (e) {
+      debugPrint('❌ [OSD AUTH] Login exception: $e');
+
+      // Check if exception message contains rate limit info
+      final errorStr = e.toString().toLowerCase();
+      String errorMessage;
+      if (errorStr.contains('429') ||
+          errorStr.contains('rate limit') ||
+          errorStr.contains('too many')) {
+        errorMessage = 'Too many login attempts. Please try again later.';
+      } else {
+        // Security best practice: Don't reveal whether email or password was incorrect
+        errorMessage =
+            'Invalid email or password. Please check your credentials and try again.';
+      }
+
+      final authState = AuthState.unauthenticated(errorMessage);
+      _updateState(authState);
+      return authState;
+    }
+  }
+
+  /// Fetch available OSD displays for the user
+  /// Uses server_displays table (same as SDS)
+  Future<List<OsdDisplay>> fetchOsdDisplays() async {
+    try {
+      if (_currentUser == null || _currentUser!.organizationId == null) {
+        debugPrint('❌ [OSD AUTH] No user or organization ID available');
+        return [];
+      }
+
+      debugPrint(
+          '🔍 [OSD AUTH] Fetching OSD displays for org: ${_currentUser!.organizationId}');
+
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        ApiEndpoints.osdDisplays,
+        queryParameters: {'organization_id': _currentUser!.organizationId},
+      );
+
+      if (response.success && response.data != null) {
+        // Try different possible response formats
+        final displaysData = response.data!['serverDisplays'] as List<dynamic>? ??
+            response.data!['displays'] as List<dynamic>? ??
+            response.data!['data'] as List<dynamic>?;
+
+        if (displaysData != null) {
+          _availableDisplays = displaysData
+              .map((d) => OsdDisplay.fromJson(d as Map<String, dynamic>))
+              .where((d) => d.active)
+              .toList();
+
+          debugPrint(
+              '✅ [OSD AUTH] Found ${_availableDisplays.length} OSD displays');
+          notifyListeners();
+          return _availableDisplays;
+        }
+      }
+
+      debugPrint('❌ [OSD AUTH] Failed to fetch OSD displays');
+      return [];
+    } catch (e) {
+      debugPrint('❌ [OSD AUTH] Error fetching OSD displays: $e');
+      return [];
+    }
+  }
+
+  /// Select an OSD display and configure SettingsService
+  Future<void> selectDisplay(OsdDisplay display) async {
+    _selectedDisplay = display;
+    debugPrint('✅ [OSD AUTH] Selected display: ${display.name} (${display.id})');
+
+    // Configure SettingsService with the selected display info
+    final settingsService = SettingsService.instance;
+    final storeId = display.storeId ?? '';
+    final organizationId = _currentUser?.organizationId ?? '';
+
+    debugPrint('📝 [OSD AUTH] Configuring SettingsService:');
+    debugPrint('   Display ID: ${display.id}');
+    debugPrint('   Display Name: ${display.name}');
+    debugPrint('   Store ID: $storeId');
+    debugPrint('   Organization ID: $organizationId');
+
+    await settingsService.setDeviceConfiguration(
+      displayId: display.id,
+      deviceName: display.name,
+      organizationId: organizationId,
+      storeId: storeId,
+    );
+
+    debugPrint('✅ [OSD AUTH] SettingsService configured successfully');
+    notifyListeners();
+  }
+
+  /// Clear selected display
+  void clearSelectedDisplay() {
+    _selectedDisplay = null;
+    notifyListeners();
+  }
+
+  /// Sign out
+  Future<void> signOut() async {
+    try {
+      debugPrint('🔐 [OSD AUTH] Signing out...');
+
+      // Clear all stored data
+      await _apiClient.clearAllData();
+
+      // Reset state
+      _currentUser = null;
+      _availableDisplays = [];
+      _selectedDisplay = null;
+
+      _updateState(const AuthState.unauthenticated());
+      debugPrint('✅ [OSD AUTH] Sign out complete');
+    } catch (e) {
+      debugPrint('❌ [OSD AUTH] Sign out error: $e');
+      _updateState(const AuthState.unauthenticated());
+    }
+  }
+
+  /// Check if auto-login is enabled
+  Future<bool> isAutoLoginEnabled() async {
+    return await _apiClient.isAutoLoginEnabled();
+  }
+
+  /// Disable auto-login (but keep user logged in)
+  Future<void> disableAutoLogin() async {
+    await _apiClient.clearCredentials();
+    debugPrint('🔐 [OSD AUTH] Auto-login disabled');
+  }
+}
