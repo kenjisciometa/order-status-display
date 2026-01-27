@@ -25,11 +25,14 @@ class SettingsService extends ChangeNotifier {
   static const String _keyOrganizationId = 'osd_organization_id';
   static const String _keyStoreId = 'osd_store_id';
   static const String _keyLanguage = 'osd_language';
-  static const String _keyShowCallNumber = 'osd_show_call_number';
-  static const String _keyShowTableNumber = 'osd_show_table_number';
   static const String _keyAutoRefreshInterval = 'osd_auto_refresh_interval';
   static const String _keyPlayReadySound = 'osd_play_ready_sound';
   static const String _keyPrimaryDisplayType = 'osd_primary_display_type';
+  static const String _keyIsDarkMode = 'osd_is_dark_mode';
+  static const String _keyShowElapsedTimeNowCooking = 'osd_show_elapsed_time_now_cooking';
+  static const String _keyShowElapsedTimeReady = 'osd_show_elapsed_time_ready';
+  static const String _keyHighlightDurationSeconds = 'osd_highlight_duration_seconds';
+  static const String _keyReadySoundType = 'osd_ready_sound_type';
 
   // Cached settings
   String? _displayId;
@@ -37,11 +40,14 @@ class SettingsService extends ChangeNotifier {
   String? _organizationId;
   String? _storeId;
   String _language = 'ja';
-  bool _showCallNumber = true;
-  bool _showTableNumber = true;
   int _autoRefreshInterval = 30; // seconds
   bool _playReadySound = true;
   PrimaryDisplayType _primaryDisplayType = PrimaryDisplayType.callNumber;
+  bool _isDarkMode = false; // Default to light mode
+  bool _showElapsedTimeNowCooking = false; // Default to hide elapsed time on Now Cooking
+  bool _showElapsedTimeReady = false; // Default to hide elapsed time on It's Ready
+  int _highlightDurationSeconds = 60; // Default 1 minute highlight for newly ready orders
+  ReadySoundType _readySoundType = ReadySoundType.slick; // Default sound type
 
   // Getters
   String? get displayId => _displayId;
@@ -49,11 +55,15 @@ class SettingsService extends ChangeNotifier {
   String? get organizationId => _organizationId;
   String? get storeId => _storeId;
   String get language => _language;
-  bool get showCallNumber => _showCallNumber;
-  bool get showTableNumber => _showTableNumber;
   int get autoRefreshInterval => _autoRefreshInterval;
   bool get playReadySound => _playReadySound;
   PrimaryDisplayType get primaryDisplayType => _primaryDisplayType;
+  bool get isDarkMode => _isDarkMode;
+  bool get showElapsedTimeNowCooking => _showElapsedTimeNowCooking;
+  bool get showElapsedTimeReady => _showElapsedTimeReady;
+  int get highlightDurationSeconds => _highlightDurationSeconds;
+  Duration get highlightDuration => Duration(seconds: _highlightDurationSeconds);
+  ReadySoundType get readySoundType => _readySoundType;
   bool get isConfigured =>
       _displayId != null && _storeId != null && _organizationId != null;
 
@@ -75,8 +85,6 @@ class SettingsService extends ChangeNotifier {
     _organizationId = _prefs.getString(_keyOrganizationId);
     _storeId = _prefs.getString(_keyStoreId);
     _language = _prefs.getString(_keyLanguage) ?? 'ja';
-    _showCallNumber = _prefs.getBool(_keyShowCallNumber) ?? true;
-    _showTableNumber = _prefs.getBool(_keyShowTableNumber) ?? true;
     _autoRefreshInterval = _prefs.getInt(_keyAutoRefreshInterval) ?? 30;
     _playReadySound = _prefs.getBool(_keyPlayReadySound) ?? true;
     final displayTypeStr = _prefs.getString(_keyPrimaryDisplayType);
@@ -84,12 +92,22 @@ class SettingsService extends ChangeNotifier {
       (e) => e.name == displayTypeStr,
       orElse: () => PrimaryDisplayType.callNumber,
     );
+    _isDarkMode = _prefs.getBool(_keyIsDarkMode) ?? false;
+    _showElapsedTimeNowCooking = _prefs.getBool(_keyShowElapsedTimeNowCooking) ?? false;
+    _showElapsedTimeReady = _prefs.getBool(_keyShowElapsedTimeReady) ?? false;
+    _highlightDurationSeconds = _prefs.getInt(_keyHighlightDurationSeconds) ?? 60;
+    final soundTypeStr = _prefs.getString(_keyReadySoundType);
+    _readySoundType = ReadySoundType.values.firstWhere(
+      (e) => e.name == soundTypeStr,
+      orElse: () => ReadySoundType.slick,
+    );
 
     debugPrint('📝 [OSD SETTINGS] Loaded settings:');
     debugPrint('   Display ID: $_displayId');
     debugPrint('   Device Name: $_deviceName');
     debugPrint('   Store ID: $_storeId');
     debugPrint('   Language: $_language');
+    debugPrint('   Dark Mode: $_isDarkMode');
   }
 
   /// Set device configuration (called after display selection)
@@ -120,20 +138,6 @@ class SettingsService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Set show call number preference
-  Future<void> setShowCallNumber(bool value) async {
-    _showCallNumber = value;
-    await _prefs.setBool(_keyShowCallNumber, value);
-    notifyListeners();
-  }
-
-  /// Set show table number preference
-  Future<void> setShowTableNumber(bool value) async {
-    _showTableNumber = value;
-    await _prefs.setBool(_keyShowTableNumber, value);
-    notifyListeners();
-  }
-
   /// Set auto refresh interval (in seconds)
   Future<void> setAutoRefreshInterval(int seconds) async {
     _autoRefreshInterval = seconds;
@@ -152,6 +156,41 @@ class SettingsService extends ChangeNotifier {
   Future<void> setPrimaryDisplayType(PrimaryDisplayType type) async {
     _primaryDisplayType = type;
     await _prefs.setString(_keyPrimaryDisplayType, type.name);
+    notifyListeners();
+  }
+
+  /// Set dark mode preference
+  Future<void> setDarkMode(bool value) async {
+    _isDarkMode = value;
+    await _prefs.setBool(_keyIsDarkMode, value);
+    notifyListeners();
+  }
+
+  /// Set show elapsed time preference for Now Cooking
+  Future<void> setShowElapsedTimeNowCooking(bool value) async {
+    _showElapsedTimeNowCooking = value;
+    await _prefs.setBool(_keyShowElapsedTimeNowCooking, value);
+    notifyListeners();
+  }
+
+  /// Set show elapsed time preference for It's Ready
+  Future<void> setShowElapsedTimeReady(bool value) async {
+    _showElapsedTimeReady = value;
+    await _prefs.setBool(_keyShowElapsedTimeReady, value);
+    notifyListeners();
+  }
+
+  /// Set highlight duration for newly ready orders (in seconds)
+  Future<void> setHighlightDurationSeconds(int seconds) async {
+    _highlightDurationSeconds = seconds;
+    await _prefs.setInt(_keyHighlightDurationSeconds, seconds);
+    notifyListeners();
+  }
+
+  /// Set ready sound type
+  Future<void> setReadySoundType(ReadySoundType type) async {
+    _readySoundType = type;
+    await _prefs.setString(_keyReadySoundType, type.name);
     notifyListeners();
   }
 
@@ -177,4 +216,36 @@ enum PrimaryDisplayType {
   callNumber,   // Customer pickup number (default)
   tableNumber,  // Table number for dine-in
   orderNumber,  // System order identifier
+}
+
+/// Ready sound type options
+enum ReadySoundType {
+  slick,        // Default notification sound (slick-notification)
+  bell,         // Bell ring sound (ちりりりーん)
+  quick,        // Quick notification sound (that-was-quick)
+}
+
+/// Get display name for sound type
+extension ReadySoundTypeExtension on ReadySoundType {
+  String get displayName {
+    switch (this) {
+      case ReadySoundType.slick:
+        return 'Notification';
+      case ReadySoundType.bell:
+        return 'Bell';
+      case ReadySoundType.quick:
+        return 'Quick';
+    }
+  }
+
+  String get assetPath {
+    switch (this) {
+      case ReadySoundType.slick:
+        return 'sounds/order_ready.mp3';
+      case ReadySoundType.bell:
+        return 'sounds/bell.mp3';
+      case ReadySoundType.quick:
+        return 'sounds/notification.mp3';
+    }
+  }
 }

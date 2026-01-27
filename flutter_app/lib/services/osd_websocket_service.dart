@@ -57,6 +57,7 @@ class OsdWebSocketService extends ChangeNotifier {
   Function(OsdOrder)? onNewOrder; // order_created → "Now Cooking"
   Function(String orderId)? onOrderReady; // order_ready → "It's Ready"
   Function(String orderId)? onOrderServed; // order_served → Remove from display
+  Function(String orderId, String targetStatus)? onOrderRestored; // order_restored → Move based on targetStatus
   Function(String)? onError;
   Function()? onConnected;
   Function()? onDisconnected;
@@ -320,33 +321,39 @@ class OsdWebSocketService extends ChangeNotifier {
     // NEW ORDER: order_created → Add to "Now Cooking"
     _socket!.on('order_created', (data) {
       debugPrint('🆕 [OSD←BOS] New order received via order_created');
-      debugPrint('   📱 Data: $data');
+      debugPrint('   📱 Raw data type: ${data.runtimeType}');
 
       try {
         if (data is Map<String, dynamic>) {
+          // Send ACK if required (Reliable Messaging)
+          _sendMessageAck(data);
+
           final orderData =
               data['orderData'] as Map<String, dynamic>? ?? data;
           final osdOrder = OsdOrder.fromWebSocketEvent(orderData);
 
-          debugPrint('   📦 Order ID: ${osdOrder.id}');
+          debugPrint('   📦 Parsed Order ID: ${osdOrder.id}');
           debugPrint('   📞 Call Number: ${osdOrder.callNumber}');
 
           _notificationsReceived++;
           onNewOrder?.call(osdOrder);
           notifyListeners();
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
         debugPrint('❌ OSD: Error processing order_created: $e');
+        debugPrint('   Stack trace: $stackTrace');
       }
     });
 
     // ORDER READY: order_ready_notification → Move to "It's Ready"
     _socket!.on('order_ready_notification', (data) {
       debugPrint('✅ [OSD←KDS] Order ready notification received');
-      debugPrint('   📱 Data: $data');
 
       try {
         if (data is Map<String, dynamic>) {
+          // Send ACK if required (Reliable Messaging)
+          _sendMessageAck(data);
+
           final orderId = (data['orderId'] ?? data['order_id']) as String?;
 
           if (orderId != null) {
@@ -364,10 +371,12 @@ class OsdWebSocketService extends ChangeNotifier {
     // ORDER SERVED: order_served_notification → Remove from display
     _socket!.on('order_served_notification', (data) {
       debugPrint('🍽️ [OSD←SDS] Order served notification received');
-      debugPrint('   📱 Data: $data');
 
       try {
         if (data is Map<String, dynamic>) {
+          // Send ACK if required (Reliable Messaging)
+          _sendMessageAck(data);
+
           final orderId = (data['orderId'] ?? data['order_id']) as String?;
 
           if (orderId != null) {
@@ -379,6 +388,32 @@ class OsdWebSocketService extends ChangeNotifier {
         }
       } catch (e) {
         debugPrint('❌ OSD: Error processing order_served_notification: $e');
+      }
+    });
+
+    // ORDER RESTORED: order_restored_notification → Move based on targetStatus
+    // Ready→Pending: Move back to "Now Cooking"
+    // Served→Ready: Move back to "It's Ready"
+    _socket!.on('order_restored_notification', (data) {
+      debugPrint('🔄 [OSD←KDS/SDS] Order restored notification received');
+
+      try {
+        if (data is Map<String, dynamic>) {
+          // Send ACK if required (Reliable Messaging)
+          _sendMessageAck(data);
+
+          final orderId = (data['orderId'] ?? data['order_id']) as String?;
+          final targetStatus = (data['targetStatus'] ?? data['target_status'] ?? 'pending') as String;
+
+          if (orderId != null) {
+            debugPrint('   📦 Order ID: $orderId → Restoring to "$targetStatus"');
+            _notificationsReceived++;
+            onOrderRestored?.call(orderId, targetStatus);
+            notifyListeners();
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ OSD: Error processing order_restored_notification: $e');
       }
     });
 
@@ -447,6 +482,42 @@ class OsdWebSocketService extends ChangeNotifier {
   void _stopHeartbeat() {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
+  }
+
+  /// Send message acknowledgment for Reliable Messaging
+  ///
+  /// The WebSocket server uses Reliable Messaging which requires ACKs
+  /// for messages with `_requiresAck: true`. Without ACKs, the server
+  /// will retry sending the same message multiple times (maxRetries=3-5).
+  ///
+  /// This is the same ACK mechanism used by KDS and SDS:
+  /// - KDS: `kds_websocket_service.dart` lines 275-287, 570-571, 730-731, 1376-1377
+  /// - SDS: `sds_websocket_service.dart` lines 747-758, 491-492, 769-770, 936-937, 959-960, 982-983
+  ///
+  /// The ACK flow:
+  /// 1. Server sends message with `_messageId` and `_requiresAck: true`
+  /// 2. Client receives message and sends `message_ack` event
+  /// 3. Server marks message as delivered and stops retry attempts
+  ///
+  /// Events that require ACK (from ReliableMessaging.js):
+  /// - order_created (from BOS/POS)
+  /// - order_ready_notification (from KDS)
+  /// - order_served_notification (from SDS)
+  /// - order_restored_notification (from KDS/SDS)
+  /// - session_updated, order_status_update, etc.
+  void _sendMessageAck(Map<String, dynamic> data) {
+    final messageId = data['_messageId'] as String?;
+    final requiresAck = data['_requiresAck'] as bool? ?? false;
+
+    if (messageId != null && requiresAck && _socket?.connected == true) {
+      _socket!.emit('message_ack', {
+        '_messageId': messageId, // Must use '_messageId' to match server expectation
+        'deviceId': _currentDeviceId,
+        'status': 'received',
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      debugPrint('   📤 ACK sent for _messageId: $messageId');
+    }
   }
 
   /// Schedule reconnection
@@ -581,6 +652,7 @@ class OsdWebSocketService extends ChangeNotifier {
         'order_created',
         'order_ready_notification',
         'order_served_notification',
+        'order_restored_notification',
         'automatic_reconnection',
         'heartbeat_monitoring',
       ],

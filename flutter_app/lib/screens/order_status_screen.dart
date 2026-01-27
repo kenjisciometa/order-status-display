@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/osd_order.dart';
 import '../services/osd_websocket_service.dart';
 import '../services/osd_order_service.dart';
 import '../services/settings_service.dart';
 import '../services/audio_service.dart';
 import '../widgets/order_card.dart';
-import '../widgets/connection_status_bar.dart';
 import 'settings_screen.dart';
 
 /// Order Status Screen
@@ -26,6 +26,9 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   final List<OsdOrder> _nowCookingOrders = [];
   final List<OsdOrder> _readyOrders = [];
 
+  // Track when orders became ready (for highlighting recently ready orders)
+  final Map<String, DateTime> _orderReadyTimes = {};
+
   // Services
   late OsdWebSocketService _webSocketService;
   late OsdOrderService _orderService;
@@ -36,7 +39,8 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   bool _isLoading = true;
   bool _isConnected = false;
   String? _errorMessage;
-  Timer? _refreshTimer;
+  Timer? _clockTimer; // UI update timer for elapsed time display (KDS-style)
+  Timer? _highlightTimer; // Timer to update highlight state
 
   @override
   void initState() {
@@ -46,78 +50,87 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    _clockTimer?.cancel();
+    _highlightTimer?.cancel();
     _webSocketService.disconnect();
     super.dispose();
   }
 
   /// Initialize services and connect to WebSocket
+  ///
+  /// OSD PURE WEBSOCKET MODE (KDS-style):
+  /// - WebSocket events trigger DB fetch (no event data used directly)
+  /// - No periodic refresh polling
+  /// - Clock timer only for UI elapsed time updates
   Future<void> _initializeServices() async {
     _webSocketService = OsdWebSocketService.instance;
     _orderService = OsdOrderService.instance;
     _settingsService = SettingsService.instance;
     _audioService = AudioService.instance;
 
-    // Setup WebSocket callbacks
+    // Setup WebSocket callbacks (KDS-style: events trigger DB fetch)
     _setupWebSocketCallbacks();
 
-    // Load initial data
+    // Load initial data from DB
     await _loadOrders();
 
     // Connect to WebSocket
     await _connectWebSocket();
 
-    // Setup periodic refresh as fallback
-    _setupPeriodicRefresh();
+    // Start UI timers (KDS-style: clock timer only, no polling)
+    _startTimers();
   }
 
-  /// Setup WebSocket event callbacks
+  /// Setup WebSocket event callbacks (KDS-style: events trigger DB fetch)
+  ///
+  /// OSD PURE WEBSOCKET MODE:
+  /// - WebSocket events are used as TRIGGERS only
+  /// - Actual data is always fetched from DB via API
+  /// - This ensures data accuracy (no callNumber: null issues)
   void _setupWebSocketCallbacks() {
-    // New order created → Add to "Now Cooking"
+    // order_created → Trigger DB fetch (new order added)
     _webSocketService.onNewOrder = (order) {
-      debugPrint('📥 [OSD UI] New order received: ${order.displayNumber}');
-      setState(() {
-        // Add to "Now Cooking" if not already present
-        if (!_nowCookingOrders.any((o) => o.id == order.id)) {
-          _nowCookingOrders.insert(0, order);
-        }
-      });
+      debugPrint('🆕 [OSD WebSocket] order_created event received');
+      debugPrint('   📦 Order ID from event: ${order.id}');
+      debugPrint('   🔄 Triggering DB fetch (KDS-style)...');
+      _loadOrders(); // Fetch fresh data from DB
     };
 
-    // Order ready → Move to "It's Ready"
+    // order_ready_notification → Trigger DB fetch (order moved to ready)
     _webSocketService.onOrderReady = (orderId) {
-      debugPrint('📥 [OSD UI] Order ready: $orderId');
-      setState(() {
-        // Find order in "Now Cooking"
-        final orderIndex =
-            _nowCookingOrders.indexWhere((o) => o.id == orderId);
-        if (orderIndex != -1) {
-          // Move to "It's Ready"
-          final order = _nowCookingOrders.removeAt(orderIndex);
-          final readyOrder = order.copyWith(
-            displayStatus: 'ready',
-            kitchenCompletedAt: DateTime.now(),
-          );
-          _readyOrders.insert(0, readyOrder);
+      debugPrint('✅ [OSD WebSocket] order_ready_notification event received');
+      debugPrint('   📦 Order ID: $orderId');
+      debugPrint('   🔄 Triggering DB fetch (KDS-style)...');
 
-          // Play sound
-          if (_settingsService.playReadySound) {
-            _audioService.playOrderReadySound();
-          }
-        } else {
-          // Order not in "Now Cooking", might need to fetch from API
-          _refreshSingleOrder(orderId);
-        }
-      });
+      // Track when this order became ready (for highlighting)
+      _orderReadyTimes[orderId] = DateTime.now();
+
+      // Play sound immediately (don't wait for DB fetch)
+      if (_settingsService.playReadySound) {
+        _audioService.playOrderReadySound();
+      }
+
+      _loadOrders(); // Fetch fresh data from DB
     };
 
-    // Order served → Remove from display
+    // order_served_notification → Trigger DB fetch (order removed from display)
     _webSocketService.onOrderServed = (orderId) {
-      debugPrint('📥 [OSD UI] Order served: $orderId');
-      setState(() {
-        _readyOrders.removeWhere((o) => o.id == orderId);
-        _nowCookingOrders.removeWhere((o) => o.id == orderId);
-      });
+      debugPrint('🍽️ [OSD WebSocket] order_served_notification event received');
+      debugPrint('   📦 Order ID: $orderId');
+      debugPrint('   🔄 Triggering DB fetch (KDS-style)...');
+
+      // Clean up tracking
+      _orderReadyTimes.remove(orderId);
+
+      _loadOrders(); // Fetch fresh data from DB
+    };
+
+    // order_restored_notification → Trigger DB fetch (order status restored)
+    _webSocketService.onOrderRestored = (orderId, targetStatus) {
+      debugPrint('🔄 [OSD WebSocket] order_restored_notification event received');
+      debugPrint('   📦 Order ID: $orderId → $targetStatus');
+      debugPrint('   🔄 Triggering DB fetch (KDS-style)...');
+      _loadOrders(); // Fetch fresh data from DB
     };
 
     // Connection status
@@ -138,7 +151,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
     // Data refresh (recovery after reconnection)
     _webSocketService.onDataRefreshRequested = () {
-      debugPrint('🔄 [OSD UI] Data refresh requested');
+      debugPrint('🔄 [OSD UI] Data refresh requested (reconnection recovery)');
       _loadOrders();
     };
 
@@ -171,14 +184,25 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
     );
   }
 
-  /// Load orders from API
+  /// Load orders from API (KDS-style: Single Source of Truth)
+  ///
+  /// This method fetches all active orders from the database.
+  /// Called on:
+  /// - Initial load
+  /// - WebSocket events (order_created, order_ready, order_served, order_restored)
+  /// - Reconnection recovery
   Future<void> _loadOrders() async {
     final storeId = _settingsService.storeId;
     if (storeId == null) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    debugPrint('📥 [OSD DB] Fetching orders from database...');
+
+    // Only show loading indicator on initial load
+    if (_nowCookingOrders.isEmpty && _readyOrders.isEmpty) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       final orders = await _orderService.fetchActiveOrders(storeId);
@@ -207,10 +231,17 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         _errorMessage = null;
       });
 
-      debugPrint(
-          '✅ [OSD UI] Loaded ${_nowCookingOrders.length} cooking, ${_readyOrders.length} ready');
+      debugPrint('✅ [OSD DB] Loaded ${_nowCookingOrders.length} cooking, ${_readyOrders.length} ready');
+
+      // Debug: Log order details
+      for (final order in _nowCookingOrders) {
+        debugPrint('   🍳 Cooking: ${order.displayNumber} (id=${order.id}, callNumber=${order.callNumber})');
+      }
+      for (final order in _readyOrders) {
+        debugPrint('   ✅ Ready: ${order.displayNumber} (id=${order.id}, callNumber=${order.callNumber})');
+      }
     } catch (e) {
-      debugPrint('❌ [OSD UI] Error loading orders: $e');
+      debugPrint('❌ [OSD DB] Error loading orders: $e');
       setState(() {
         _isLoading = false;
         _errorMessage = 'Failed to load orders';
@@ -218,101 +249,280 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
     }
   }
 
-  /// Refresh a single order from API
-  Future<void> _refreshSingleOrder(String orderId) async {
-    final order = await _orderService.getOrderById(orderId);
-    if (order == null) return;
+  /// Start UI timers (KDS-style: PURE WEBSOCKET MODE)
+  ///
+  /// OSD PURE WEBSOCKET MODE:
+  /// - NO POLLING: WebSocket events trigger DB fetch for all updates
+  /// - Clock timer: 500ms interval for smooth elapsed time display updates
+  /// - Highlight timer: 5s interval for recently ready order highlight cleanup
+  void _startTimers() {
+    debugPrint('✅ OSD PURE WEBSOCKET MODE: No polling - WebSocket events trigger DB fetch');
 
-    setState(() {
-      if (order.isNowCooking) {
-        if (!_nowCookingOrders.any((o) => o.id == order.id)) {
-          _nowCookingOrders.add(order);
-        }
-      } else if (order.isReady) {
-        // Remove from "Now Cooking" if present
-        _nowCookingOrders.removeWhere((o) => o.id == order.id);
-        // Add to "Ready" if not present
-        if (!_readyOrders.any((o) => o.id == order.id)) {
-          _readyOrders.insert(0, order);
-          if (_settingsService.playReadySound) {
-            _audioService.playOrderReadySound();
+    // Clock timer: Only needed when elapsed time display is enabled
+    // Uses 1-second interval (sufficient for minute-based display like "<1m", "5m")
+    final needsClockTimer = _settingsService.showElapsedTimeNowCooking ||
+        _settingsService.showElapsedTimeReady;
+
+    _clockTimer?.cancel();
+    if (needsClockTimer) {
+      debugPrint('   ⏱️ Clock timer started (elapsed time display is ON)');
+      _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    } else {
+      debugPrint('   ⏱️ Clock timer not needed (elapsed time display is OFF)');
+    }
+
+    // Highlight timer for recently ready order highlight cleanup
+    _highlightTimer?.cancel();
+    _highlightTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted && _orderReadyTimes.isNotEmpty) {
+        // Clean up expired entries
+        final now = DateTime.now();
+        final highlightDuration = _settingsService.highlightDuration;
+        final expiredOrders = <String>[];
+        for (final entry in _orderReadyTimes.entries) {
+          if (now.difference(entry.value) > highlightDuration) {
+            expiredOrders.add(entry.key);
           }
+        }
+        if (expiredOrders.isNotEmpty) {
+          setState(() {
+            for (final orderId in expiredOrders) {
+              _orderReadyTimes.remove(orderId);
+            }
+          });
         }
       }
     });
   }
 
-  /// Setup periodic refresh as fallback
-  void _setupPeriodicRefresh() {
-    final interval = _settingsService.autoRefreshInterval;
-    _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(Duration(seconds: interval), (_) {
-      if (!_isConnected) {
-        debugPrint('🔄 [OSD UI] Periodic refresh (WebSocket disconnected)');
-        _loadOrders();
-      }
-    });
+  /// Check if an order should be highlighted (recently became ready)
+  bool _isOrderHighlighted(String orderId) {
+    final readyTime = _orderReadyTimes[orderId];
+    if (readyTime == null) return false;
+    return DateTime.now().difference(readyTime) <= _settingsService.highlightDuration;
   }
 
   @override
   Widget build(BuildContext context) {
+    final settingsService = Provider.of<SettingsService>(context);
+    final isDarkMode = settingsService.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
-      body: Column(
+      backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
+      body: Stack(
         children: [
-          // Connection status bar
-          ConnectionStatusBar(
-            isConnected: _isConnected,
-            onSettingsTap: () => _openSettings(),
-            errorMessage: _errorMessage,
+          // Main content (full screen)
+          _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: isDarkMode ? const Color(0xFF00D9FF) : const Color(0xFF2196F3),
+                  ),
+                )
+              : _buildMainContent(isDarkMode, settingsService.showElapsedTimeNowCooking, settingsService.showElapsedTimeReady),
+
+          // Connection indicator (top-right corner)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: _buildConnectionIndicator(isDarkMode),
           ),
 
-          // Main content
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF00D9FF),
-                    ),
-                  )
-                : _buildMainContent(),
+          // Settings button (top-left corner)
+          Positioned(
+            top: 8,
+            left: 8,
+            child: _buildSettingsButton(isDarkMode),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMainContent() {
+  /// Build connection status indicator (small dot)
+  Widget _buildConnectionIndicator(bool isDarkMode) {
+    return GestureDetector(
+      onTap: () {
+        // Show connection details on tap
+        _showConnectionDetails();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: (isDarkMode ? Colors.black : Colors.white).withOpacity(0.3),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Connection dot
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _isConnected ? Colors.green : Colors.red,
+                boxShadow: [
+                  BoxShadow(
+                    color: (_isConnected ? Colors.green : Colors.red).withOpacity(0.5),
+                    blurRadius: 6,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(width: 6),
+              Icon(
+                Icons.warning_amber_rounded,
+                size: 16,
+                color: Colors.orange,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build settings button (gear icon)
+  Widget _buildSettingsButton(bool isDarkMode) {
+    return GestureDetector(
+      onTap: _openSettings,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: (isDarkMode ? Colors.black : Colors.white).withOpacity(0.3),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          Icons.settings,
+          size: 20,
+          color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7),
+        ),
+      ),
+    );
+  }
+
+  /// Show connection details dialog
+  void _showConnectionDetails() {
+    final isDarkMode = Provider.of<SettingsService>(context, listen: false).isDarkMode;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : Colors.white,
+        title: Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _isConnected ? Colors.green : Colors.red,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _isConnected ? 'Connected' : 'Disconnected',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_errorMessage != null) ...[
+              Text(
+                'Error: $_errorMessage',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            Text(
+              'Now Cooking: ${_nowCookingOrders.length}',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black87,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              'Ready: ${_readyOrders.length}',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black87,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _loadOrders();
+            },
+            child: const Text('Refresh'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent(bool isDarkMode, bool showElapsedTimeNowCooking, bool showElapsedTimeReady) {
+    // Filter orders based on display type setting
+    // Only show orders that have the required data for the selected display type
+    final filteredNowCookingOrders =
+        _nowCookingOrders.where((o) => o.shouldDisplay).toList();
+    final filteredReadyOrders =
+        _readyOrders.where((o) => o.shouldDisplay).toList();
+
+    debugPrint('🔄 [OSD UI] Building content: nowCooking=${_nowCookingOrders.length}→${filteredNowCookingOrders.length}, ready=${_readyOrders.length}→${filteredReadyOrders.length}');
+
     return Row(
       children: [
         // Left Column: "Now Cooking"
         Expanded(
           child: _buildColumn(
             title: 'Now Cooking',
-            subtitle: 'Preparing Your Order',
-            orders: _nowCookingOrders,
-            backgroundColor: const Color(0xFF0F3460),
+            orders: filteredNowCookingOrders,
+            backgroundColor: isDarkMode ? const Color(0xFF0F3460) : const Color(0xFFE3F2FD),
             accentColor: const Color(0xFFFF9800),
             emptyMessage: 'No orders being prepared',
+            isDarkMode: isDarkMode,
+            showElapsedTime: showElapsedTimeNowCooking, // Controlled by settings
           ),
         ),
 
         // Divider
         Container(
           width: 2,
-          color: const Color(0xFF00D9FF).withOpacity(0.3),
+          color: isDarkMode
+              ? const Color(0xFF00D9FF).withOpacity(0.3)
+              : const Color(0xFF2196F3).withOpacity(0.3),
         ),
 
         // Right Column: "It's Ready"
         Expanded(
           child: _buildColumn(
             title: "It's Ready",
-            subtitle: 'Please Pick Up',
-            orders: _readyOrders,
-            backgroundColor: const Color(0xFF16213E),
+            orders: filteredReadyOrders,
+            backgroundColor: isDarkMode ? const Color(0xFF16213E) : const Color(0xFFE8F5E9),
             accentColor: const Color(0xFF4CAF50),
             emptyMessage: 'No orders ready for pickup',
             isReady: true,
+            isDarkMode: isDarkMode,
+            showElapsedTime: showElapsedTimeReady, // Controlled by settings
           ),
         ),
       ],
@@ -321,55 +531,53 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
   Widget _buildColumn({
     required String title,
-    required String subtitle,
     required List<OsdOrder> orders,
     required Color backgroundColor,
     required Color accentColor,
     required String emptyMessage,
     bool isReady = false,
+    bool isDarkMode = true,
+    bool showElapsedTime = true,
   }) {
+    final textColor = isDarkMode ? Colors.white : const Color(0xFF1A1A2E);
+
     return Container(
       color: backgroundColor,
       child: Column(
         children: [
-          // Header
+          // Header - Compact with title and count side by side
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 24),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  accentColor.withOpacity(0.3),
-                  accentColor.withOpacity(0.1),
+                  accentColor.withOpacity(isDarkMode ? 0.3 : 0.4),
+                  accentColor.withOpacity(isDarkMode ? 0.1 : 0.2),
                 ],
               ),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Title
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
                   style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(width: 12),
+                // Count badge
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: accentColor,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     '${orders.length}',
@@ -388,43 +596,219 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
           Expanded(
             child: orders.isEmpty
                 ? Center(
-                    child: Text(
-                      emptyMessage,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isReady ? Icons.check_circle_outline : Icons.restaurant,
+                          size: 48,
+                          color: textColor.withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          emptyMessage,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: textColor.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
                     ),
                   )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 1.0,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: orders.length,
-                    itemBuilder: (context, index) {
-                      final order = orders[index];
-                      return OrderCard(
-                        order: order,
-                        isReady: isReady,
-                      );
-                    },
-                  ),
+                : isReady
+                    ? _buildReadyColumnContent(orders, isDarkMode, showElapsedTime)
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(8),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 2.0, // Width is 2x height (half height cards)
+                          crossAxisSpacing: 6,
+                          mainAxisSpacing: 6,
+                        ),
+                        itemCount: orders.length,
+                        itemBuilder: (context, index) {
+                          final order = orders[index];
+                          return OrderCard(
+                            order: order,
+                            isReady: false,
+                            isDarkMode: isDarkMode,
+                            showElapsedTime: showElapsedTime,
+                          );
+                        },
+                      ),
           ),
         ],
       ),
     );
   }
 
-  void _openSettings() {
-    Navigator.of(context).push(
+  void _openSettings() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => const SettingsScreen(),
       ),
     );
+    // Restart timers after settings change (elapsed time display may have changed)
+    _startTimers();
+  }
+
+  /// Build the "It's Ready" column content with highlighted orders at the top
+  Widget _buildReadyColumnContent(List<OsdOrder> orders, bool isDarkMode, bool showElapsedTime) {
+    // Separate highlighted (recently ready) orders from normal ones
+    final highlightedOrders = <OsdOrder>[];
+    final normalOrders = <OsdOrder>[];
+
+    for (final order in orders) {
+      if (_isOrderHighlighted(order.id)) {
+        highlightedOrders.add(order);
+      } else {
+        normalOrders.add(order);
+      }
+    }
+
+    // If no highlighted orders, show normal grid
+    if (highlightedOrders.isEmpty) {
+      return GridView.builder(
+        padding: const EdgeInsets.all(8),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 2.0,
+          crossAxisSpacing: 6,
+          mainAxisSpacing: 6,
+        ),
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          final order = orders[index];
+          return OrderCard(
+            order: order,
+            isReady: true,
+            isDarkMode: isDarkMode,
+            showElapsedTime: showElapsedTime,
+          );
+        },
+      );
+    }
+
+    // Show highlighted orders prominently at the top
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Highlighted orders - Large, prominent display
+          // Show up to 3 highlighted orders in a row
+          _buildHighlightedOrdersSection(highlightedOrders, isDarkMode, showElapsedTime),
+
+          // Divider if there are normal orders
+          if (normalOrders.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.black.withOpacity(0.1),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'Earlier',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDarkMode
+                            ? Colors.white.withOpacity(0.5)
+                            : Colors.black.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.black.withOpacity(0.1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          // Normal orders - Smaller grid
+          if (normalOrders.isNotEmpty)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 2.0,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
+              ),
+              itemCount: normalOrders.length,
+              itemBuilder: (context, index) {
+                final order = normalOrders[index];
+                return OrderCard(
+                  order: order,
+                  isReady: true,
+                  isDarkMode: isDarkMode,
+                  showElapsedTime: showElapsedTime,
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Build the highlighted orders section with large, prominent cards
+  Widget _buildHighlightedOrdersSection(
+      List<OsdOrder> highlightedOrders, bool isDarkMode, bool showElapsedTime) {
+    // Display highlighted orders in a row (up to 3 per row)
+    // Each highlighted card is larger and more prominent
+    final rows = <Widget>[];
+    final ordersPerRow = highlightedOrders.length == 1 ? 1 : (highlightedOrders.length == 2 ? 2 : 3);
+
+    for (var i = 0; i < highlightedOrders.length; i += ordersPerRow) {
+      final rowOrders = highlightedOrders.skip(i).take(ordersPerRow).toList();
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: i + ordersPerRow < highlightedOrders.length ? 8 : 0),
+          child: Row(
+            children: rowOrders.asMap().entries.map((entry) {
+              final index = entry.key;
+              final order = entry.value;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? 0 : 4,
+                    right: index == rowOrders.length - 1 ? 0 : 4,
+                  ),
+                  child: AspectRatio(
+                    aspectRatio: highlightedOrders.length == 1 ? 2.5 : 1.5, // Taller for highlighted
+                    child: OrderCard(
+                      order: order,
+                      isReady: true,
+                      isDarkMode: isDarkMode,
+                      isHighlighted: true,
+                      showElapsedTime: showElapsedTime,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
+
+    return Column(children: rows);
   }
 }

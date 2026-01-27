@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/settings_service.dart';
 
 /// Connection Status Bar Widget
 ///
 /// Displays WebSocket connection status at the top of the screen.
 /// Includes settings button for accessing app settings.
+/// Minimal design without logo/branding.
 class ConnectionStatusBar extends StatelessWidget {
   final bool isConnected;
   final VoidCallback? onSettingsTap;
@@ -18,13 +21,16 @@ class ConnectionStatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settingsService = Provider.of<SettingsService>(context);
+    final isDarkMode = settingsService.isDarkMode;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1117),
+        color: isDarkMode ? const Color(0xFF0D1117) : const Color(0xFFF5F5F5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -34,39 +40,17 @@ class ConnectionStatusBar extends StatelessWidget {
         bottom: false,
         child: Row(
           children: [
-            // Logo / App name
-            const Row(
-              children: [
-                Icon(
-                  Icons.monitor,
-                  color: Color(0xFF00D9FF),
-                  size: 24,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Sciometa OSD',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
+            // Connection status indicator (moved to left)
+            _buildConnectionIndicator(isDarkMode),
 
             const Spacer(),
-
-            // Connection status indicator
-            _buildConnectionIndicator(),
-
-            const SizedBox(width: 16),
 
             // Settings button
             IconButton(
               onPressed: onSettingsTap,
-              icon: const Icon(
+              icon: Icon(
                 Icons.settings,
-                color: Colors.white70,
+                color: isDarkMode ? Colors.white70 : Colors.black54,
               ),
               tooltip: 'Settings',
             ),
@@ -76,7 +60,7 @@ class ConnectionStatusBar extends StatelessWidget {
     );
   }
 
-  Widget _buildConnectionIndicator() {
+  Widget _buildConnectionIndicator(bool isDarkMode) {
     if (errorMessage != null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

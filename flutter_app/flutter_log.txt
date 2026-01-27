@@ -1,0 +1,773 @@
+Launching lib/main.dart on U11 in debug mode...
+Running Gradle task 'assembleDebug'...                           2,051ms
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
+Installing build/app/outputs/flutter-apk/app-debug.apk...           4.6s
+D/FlutterJNI(28508): Beginning load of flutter...
+D/FlutterJNI(28508): flutter (null) was loaded normally!
+I/flutter (28508): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+I/flutter (28508): OSD: .env file loaded successfully
+I/flutter (28508): OSD: FLUTTER_ENV = development
+I/flutter (28508): OSD: API_BASE_URL = https://pos.sciometa.com
+I/flutter (28508): OSD: WEBSOCKET_DEV_URL = wss://websocket.sciometa.com
+I/flutter (28508): OSD: WEBSOCKET_PRODUCTION_URL = wss://websocket.sciometa.com
+I/flutter (28508): 📝 [OSD SETTINGS] Loaded settings:
+I/flutter (28508):    Display ID: 16513024-1fde-4fd3-9159-82771daa5578
+I/flutter (28508):    Device Name: test
+I/flutter (28508):    Store ID: 5af38314-53dd-45b1-94f3-892d4443198d
+I/flutter (28508):    Language: ja
+I/flutter (28508):    Dark Mode: false
+I/flutter (28508): ✅ [OSD SETTINGS] Service initialized
+I/flutter (28508): ✅ [OSD AUDIO] Service initialized
+I/Choreographer(28508): Skipped 50 frames!  The application may be doing too much work on its main thread.
+Syncing files to device U11...                                  
+I/flutter (28508): 🔒 [OSD DEVICE] Wake lock enabled
+I/flutter (28508): ✅ [OSD DEVICE] Service initialized
+I/flutter (28508):    Wake Lock: true
+I/flutter (28508):    Brightness: 0.7019608020782471
+Syncing files to device U11...                                     100ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on U11 is available at: http://127.0.0.1:57541/_BPBWRuoUnw=/
+E/mali_gralloc(28508): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(28508): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(28508): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(28508): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(28508): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(28508): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+E/Surface (28508): freeAllBuffers: 1 buffers were freed while being dequeued!
+D/mali_gralloc(28508): unregister: id=24100003475, handle=0xb40000794d41d3f0, base=0x0, importpid=28508, clone_count=0
+D/mali_gralloc(28508): unregister: id=24100003476, handle=0xb40000794d41de10, base=0x0, importpid=28508, clone_count=0
+D/mali_gralloc(28508): unregister: id=24100003477, handle=0xb40000794d41f010, base=0x0, importpid=28508, clone_count=0
+D/mali_gralloc(28508): unregister: id=24100003478, handle=0xb40000794d41f250, base=0x0, importpid=28508, clone_count=0
+D/mali_gralloc(28508): register: id=24100003479, handle=0xb40000794d41f250, importpid=28508
+D/mali_gralloc(28508): register: id=2410000347a, handle=0xb40000794d41f010, importpid=28508
+D/mali_gralloc(28508): register: id=2410000347b, handle=0xb40000794d41de10, importpid=28508
+D/mali_gralloc(28508): register: id=2410000347c, handle=0xb40000794d41d3f0, importpid=28508
+D/mali_gralloc(28508): register: id=2410000347d, handle=0xb40000794d441bd0, importpid=28508
+D/mali_gralloc(28508): unregister: id=24100003474, handle=0xb40000794d419610, base=0x0, importpid=28508, clone_count=0
+I/flutter (28508): *** OSD MAIN: Initializing auth service...
+I/flutter (28508): 🌐 [OSD API] Base URL (development): https://pos.sciometa.com
+The Flutter DevTools debugger and profiler on U11 is available at: http://127.0.0.1:9101?uri=http://127.0.0.1:57541/_BPBWRuoUnw=/
+I/Choreographer(28508): Skipped 155 frames!  The application may be doing too much work on its main thread.
+W/InteractionJankMonitor(28508): Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.sciometa.osd_app
+D/mali_gralloc(28508): register: id=2410000347e, handle=0xb40000794d445bf0, importpid=28508
+I/HWUI    (28508): Davey! duration=1755ms; Flags=1, FrameTimelineVsyncId=1232283, IntendedVsync=27453292008111, Vsync=27455014938976, InputEventId=0, HandleInputStart=27455025810015, AnimationStart=27455025813977, PerformTraversalsStart=27455029661977, DrawStart=27455033025631, FrameDeadline=27453304119222, FrameInterval=27455024854439, FrameStartTime=11115683, SyncQueued=27455034406400, SyncStart=27455034487169, IssueDrawCommandsStart=27455035173400, SwapBuffers=27455046393131, FrameCompleted=27455047764477, DequeueBufferDuration=2382385, QueueBufferDuration=1100000, GpuCompleted=27455047498823, SwapBuffersCompleted=27455047764477, DisplayPresentTime=599868, CommandSubmissionCompleted=27455046393131, 
+I/flutter (28508): 🔧 [OSD API CLIENT] Initialized with device ID: 749dc722-4956-436a-bda2-7f110f342a0d
+D/ProfileInstaller(28508): Installing profile for com.sciometa.osd_app
+I/flutter (28508): 🔐 [OSD AUTH] Found stored credentials, attempting auto-login
+I/flutter (28508): 🔐 [OSD AUTH] Attempting login with email: demo@sciometa.com
+I/flutter (28508): 🌐 [OSD API CLIENT] POST Request to: /api/auth/login
+I/flutter (28508): ✅ [OSD API CLIENT] Adding Bearer token to request: https://pos.sciometa.com/api/auth/login
+I/flutter (28508): 📤 [OSD API CLIENT] Request: POST https://pos.sciometa.com/api/auth/login
+I/flutter (28508): 📥 [OSD API CLIENT] Response: 200 https://pos.sciometa.com/api/auth/login
+I/flutter (28508): 🔐 [OSD AUTH] Login response success: true
+I/flutter (28508): 💾 [OSD API CLIENT] Storing auth token - length: 879
+I/flutter (28508): ✅ [OSD AUTH] Login successful for user: demo@sciometa.com
+I/flutter (28508): *** OSD MAIN: Auth state: AuthStatus.authenticated
+I/flutter (28508): *** OSD MAIN: User authenticated, fetching displays...
+I/flutter (28508): 🔍 [OSD AUTH] Fetching OSD displays for org: 763c8c8e-f6ab-4f29-8770-0b1f759017fb
+I/flutter (28508): 🌐 [OSD API CLIENT] GET Request to: /api/server-displays
+I/flutter (28508): ✅ [OSD API CLIENT] Adding Bearer token to request: https://pos.sciometa.com/api/server-displays?organization_id=763c8c8e-f6ab-4f29-8770-0b1f759017fb
+I/flutter (28508): 📤 [OSD API CLIENT] Request: GET https://pos.sciometa.com/api/server-displays?organization_id=763c8c8e-f6ab-4f29-8770-0b1f759017fb
+I/flutter (28508): 📥 [OSD API CLIENT] Response: 200 https://pos.sciometa.com/api/server-displays?organization_id=763c8c8e-f6ab-4f29-8770-0b1f759017fb
+I/flutter (28508): ✅ [OSD AUTH] Found 2 OSD displays
+I/flutter (28508): *** OSD MAIN: Multiple displays, showing selection screen
+W/WindowOnBackDispatcher(28508): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(28508): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/ciometa.osd_app(28508): userfaultfd: MOVE ioctl seems unsupported: Connection timed out
+I/flutter (28508): ✅ [OSD AUTH] Selected display: test (16513024-1fde-4fd3-9159-82771daa5578)
+I/flutter (28508): 📝 [OSD AUTH] Configuring SettingsService:
+I/flutter (28508):    Display ID: 16513024-1fde-4fd3-9159-82771daa5578
+I/flutter (28508):    Display Name: test
+I/flutter (28508):    Store ID: 5af38314-53dd-45b1-94f3-892d4443198d
+I/flutter (28508):    Organization ID: 763c8c8e-f6ab-4f29-8770-0b1f759017fb
+I/flutter (28508): ✅ [OSD SETTINGS] Device configuration saved
+I/flutter (28508): ✅ [OSD AUTH] SettingsService configured successfully
+I/flutter (28508): 🔍 [OSD-WEBSOCKET-CONFIG] Environment detected: development
+I/flutter (28508): 🔍 [OSD-WEBSOCKET-CONFIG] Using development URL: wss://websocket.sciometa.com
+I/flutter (28508): 📥 [OSD DB] Fetching orders from database...
+I/flutter (28508): 📥 [OSD ORDER SERVICE] Fetching active orders for store: 5af38314-53dd-45b1-94f3-892d4443198d
+I/flutter (28508):    Organization ID: 763c8c8e-f6ab-4f29-8770-0b1f759017fb
+I/flutter (28508): 🌐 [OSD API CLIENT] GET Request to: /api/kds/orders
+W/WindowOnBackDispatcher(28508): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(28508): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/flutter (28508): ✅ [OSD API CLIENT] Adding Bearer token to request: https://pos.sciometa.com/api/kds/orders?organization_id=763c8c8e-f6ab-4f29-8770-0b1f759017fb&store_id=5af38314-53dd-45b1-94f3-892d4443198d&status=pending%2Cready
+I/flutter (28508): 📤 [OSD API CLIENT] Request: GET https://pos.sciometa.com/api/kds/orders?organization_id=763c8c8e-f6ab-4f29-8770-0b1f759017fb&store_id=5af38314-53dd-45b1-94f3-892d4443198d&status=pending%2Cready
+I/flutter (28508): 📥 [OSD API CLIENT] Response: 200 https://pos.sciometa.com/api/kds/orders?organization_id=763c8c8e-f6ab-4f29-8770-0b1f759017fb&store_id=5af38314-53dd-45b1-94f3-892d4443198d&status=pending%2Cready
+I/flutter (28508): ✅ [OSD ORDER SERVICE] Fetched 1 active orders
+I/flutter (28508):    📊 Now Cooking: 1, Ready: 0
+I/flutter (28508): ✅ [OSD DB] Loaded 1 cooking, 0 ready
+I/flutter (28508):    🍳 Cooking: 2222 (id=5bc673e3-50b9-46c4-af53-e46af24fef42, callNumber=2222)
+I/flutter (28508): OSD: Connecting to WebSocket server
+I/flutter (28508): Connect parameters: storeId=5af38314-53dd-45b1-94f3-892d4443198d, deviceId=16513024-1fde-4fd3-9159-82771daa5578
+I/flutter (28508): OSD: Disconnecting from WebSocket server
+I/flutter (28508): OSD: Connecting to WebSocket server: wss://websocket.sciometa.com
+I/flutter (28508): Store ID: 5af38314-53dd-45b1-94f3-892d4443198d, Device ID: 16513024-1fde-4fd3-9159-82771daa5578
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔐 [OSD WS Token] Loaded cached token, expires: 2026-02-26 12:12:46.000Z
+I/flutter (28508): 🔐 [OSD WS Token] Service initialized
+I/flutter (28508): 🔐 [OSD WS Token] Using cached token (expires: 2026-02-26 12:12:46.000Z)
+I/flutter (28508): ✅ OSD: Obtained JWT token from server
+I/flutter (28508): OSD: Android device ID obtained: AP3A.240...
+I/flutter (28508): ✅ OSD PURE WEBSOCKET MODE: No polling - WebSocket events trigger DB fetch
+I/flutter (28508):    ⏱️ Clock timer started (elapsed time display is ON)
+I/flutter (28508): OSD: WebSocket connected
+I/flutter (28508): 🔐 OSD: Sending authentication data
+I/flutter (28508): ✅ OSD: WebSocket authenticated successfully
+I/flutter (28508): ✅ [OSD UI] WebSocket connected
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+W/WindowOnBackDispatcher(28508): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(28508): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): ✅ OSD PURE WEBSOCKET MODE: No polling - WebSocket events trigger DB fetch
+I/flutter (28508):    ⏱️ Clock timer started (elapsed time display is ON)
+W/WindowOnBackDispatcher(28508): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(28508): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): ✅ OSD PURE WEBSOCKET MODE: No polling - WebSocket events trigger DB fetch
+I/flutter (28508):    ⏱️ Clock timer started (elapsed time display is ON)
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+I/flutter (28508): 🔄 [OSD UI] Building content: nowCooking=1→1, ready=0→0
+Lost connection to device.
+The Dart compiler exited unexpectedly.

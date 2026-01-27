@@ -20,7 +20,8 @@ class OsdOrder {
   final String displayStatus; // 'pending', 'ready', 'served' - from order_items.display_status
   final String? kitchenStatus; // Legacy field from orders table (for reference only)
   final DateTime createdAt;
-  final DateTime? kitchenCompletedAt; // When marked ready
+  final DateTime? kitchenCompletedAt; // Legacy: When marked ready (from orders table)
+  final DateTime? readyAt; // Accurate: When display_status became 'ready' (from order_items.display_status.ready_at)
   final DateTime? servedAt; // When served (removed from display)
 
   OsdOrder({
@@ -33,6 +34,7 @@ class OsdOrder {
     this.kitchenStatus,
     required this.createdAt,
     this.kitchenCompletedAt,
+    this.readyAt,
     this.servedAt,
   });
 
@@ -99,6 +101,26 @@ class OsdOrder {
     }
   }
 
+  /// Check if order should be displayed based on current display type setting
+  /// Returns true if the order has the required data for the selected display type
+  bool get shouldDisplay {
+    final displayType = SettingsService.instance.primaryDisplayType;
+
+    switch (displayType) {
+      case PrimaryDisplayType.callNumber:
+        // Only show orders with call number when call number is selected
+        return callNumber != null;
+
+      case PrimaryDisplayType.tableNumber:
+        // Only show orders with table number when table number is selected
+        return tableNumber != null;
+
+      case PrimaryDisplayType.orderNumber:
+        // Always show for order number (all orders have order number or ID)
+        return true;
+    }
+  }
+
   /// Check if order is in "Now Cooking" status
   /// Uses displayStatus (from order_items.display_status) for accurate determination
   bool get isNowCooking =>
@@ -119,9 +141,12 @@ class OsdOrder {
   }
 
   /// Get elapsed time since order became ready
+  /// Uses readyAt (from order_items.display_status.ready_at) for accuracy
+  /// Falls back to kitchenCompletedAt if readyAt is not available
   Duration get elapsedSinceReady {
-    if (kitchenCompletedAt == null) return Duration.zero;
-    final diff = DateTime.now().difference(kitchenCompletedAt!);
+    final readyTime = readyAt ?? kitchenCompletedAt;
+    if (readyTime == null) return Duration.zero;
+    final diff = DateTime.now().difference(readyTime);
     return diff.isNegative ? Duration.zero : diff;
   }
 
@@ -145,19 +170,17 @@ class OsdOrder {
     }
   }
 
-  /// Check if order should flash (waiting too long in ready status)
-  bool get shouldFlash => isReady && elapsedSinceReady.inMinutes >= 5;
-
   /// Create from KDS API JSON response
   ///
   /// The API returns orders with order_items array. Each item has display_status.
-  /// We derive the order's displayStatus from the first item's display_status.
+  /// We derive the order's displayStatus and readyAt from the first item's display_status.
   /// This matches how the API filters orders (by order_items.display_status.status).
   factory OsdOrder.fromJson(Map<String, dynamic> json) {
-    // Derive displayStatus from order_items.display_status
+    // Derive displayStatus and readyAt from order_items.display_status
     // The API filters by order_items.display_status.status, so all items
     // in a returned order should have the same display_status
     String derivedDisplayStatus = 'pending';
+    DateTime? derivedReadyAt;
 
     final orderItems = json['order_items'] as List<dynamic>?;
     if (orderItems != null && orderItems.isNotEmpty) {
@@ -167,35 +190,69 @@ class OsdOrder {
         final displayStatusObj = firstItem['display_status'];
         if (displayStatusObj is Map<String, dynamic>) {
           derivedDisplayStatus = displayStatusObj['status'] as String? ?? 'pending';
+          // Parse ready_at from display_status JSONB
+          final readyAtStr = displayStatusObj['ready_at'] as String?;
+          if (readyAtStr != null) {
+            derivedReadyAt = DateTime.tryParse(readyAtStr);
+          }
         } else if (displayStatusObj is String) {
           derivedDisplayStatus = displayStatusObj;
         }
       }
     }
 
+    // Parse ID - handle various formats
+    final rawId = json['id'];
+    final parsedId = rawId?.toString() ?? 'unknown_${DateTime.now().millisecondsSinceEpoch}';
+
+    // Parse createdAt - handle various formats
+    DateTime parsedCreatedAt = DateTime.now();
+    final rawCreatedAt = json['created_at'];
+    if (rawCreatedAt != null) {
+      if (rawCreatedAt is String) {
+        parsedCreatedAt = DateTime.tryParse(rawCreatedAt) ?? DateTime.now();
+      } else if (rawCreatedAt is int) {
+        parsedCreatedAt = DateTime.fromMillisecondsSinceEpoch(rawCreatedAt);
+      }
+    }
+
+    // Parse kitchenCompletedAt
+    DateTime? parsedKitchenCompletedAt;
+    final rawKitchenCompletedAt = json['kitchen_completed_at'];
+    if (rawKitchenCompletedAt != null && rawKitchenCompletedAt is String) {
+      parsedKitchenCompletedAt = DateTime.tryParse(rawKitchenCompletedAt);
+    }
+
+    // Parse servedAt
+    DateTime? parsedServedAt;
+    final rawServedAt = json['served_at'];
+    if (rawServedAt != null && rawServedAt is String) {
+      parsedServedAt = DateTime.tryParse(rawServedAt);
+    }
+
     return OsdOrder(
-      id: json['id'] as String,
-      callNumber: json['call_number'] as int?,
-      tableNumber: json['table_number'] as int?,
-      orderNumber: json['order_number'] as String?,
-      diningOption: json['dining_option'] as String?,
+      id: parsedId,
+      callNumber: _parseIntOrNull(json['call_number']),
+      tableNumber: _parseIntOrNull(json['table_number']),
+      orderNumber: json['order_number']?.toString(),
+      diningOption: json['dining_option']?.toString(),
       displayStatus: derivedDisplayStatus,
-      kitchenStatus: json['kitchen_status'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      kitchenCompletedAt: json['kitchen_completed_at'] != null
-          ? DateTime.parse(json['kitchen_completed_at'] as String)
-          : null,
-      servedAt: json['served_at'] != null
-          ? DateTime.parse(json['served_at'] as String)
-          : null,
+      kitchenStatus: json['kitchen_status']?.toString(),
+      createdAt: parsedCreatedAt,
+      kitchenCompletedAt: parsedKitchenCompletedAt,
+      readyAt: derivedReadyAt,
+      servedAt: parsedServedAt,
     );
   }
 
   /// Create from WebSocket event data
   factory OsdOrder.fromWebSocketEvent(Map<String, dynamic> data) {
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Parsing data keys: ${data.keys.toList()}');
+
     // WebSocket events may have different field names
-    // Try to get displayStatus from various possible field names
+    // Try to get displayStatus and readyAt from various possible field names
     String derivedDisplayStatus = 'pending';
+    DateTime? derivedReadyAt;
 
     // Check for display_status in order_items (if present)
     final orderItems = data['order_items'] ?? data['orderItems'];
@@ -205,47 +262,86 @@ class OsdOrder {
         final displayStatusObj = firstItem['display_status'] ?? firstItem['displayStatus'];
         if (displayStatusObj is Map<String, dynamic>) {
           derivedDisplayStatus = (displayStatusObj['status'] as String?) ?? 'pending';
+          // Parse ready_at from display_status JSONB
+          final readyAtStr = (displayStatusObj['ready_at'] ?? displayStatusObj['readyAt']) as String?;
+          if (readyAtStr != null) {
+            derivedReadyAt = DateTime.tryParse(readyAtStr);
+          }
         } else if (displayStatusObj is String) {
           derivedDisplayStatus = displayStatusObj;
         }
       }
     } else {
       // Fallback: use displayStatus or kitchen_status from the event data
-      derivedDisplayStatus = (data['displayStatus'] ??
+      final statusValue = data['displayStatus'] ??
               data['display_status'] ??
               data['kitchenStatus'] ??
-              data['kitchen_status'] ??
-              'pending') as String;
+              data['kitchen_status'];
+      if (statusValue is String) {
+        derivedDisplayStatus = statusValue;
+      }
+    }
+
+    // Debug: Log the raw values before parsing
+    final rawCallNumber = data['callNumber'] ?? data['call_number'];
+    final rawTableNumber = data['tableNumber'] ?? data['table_number'];
+    final rawOrderNumber = data['orderNumber'] ?? data['order_number'];
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Raw callNumber: $rawCallNumber (type: ${rawCallNumber?.runtimeType})');
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Raw tableNumber: $rawTableNumber (type: ${rawTableNumber?.runtimeType})');
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Raw orderNumber: $rawOrderNumber (type: ${rawOrderNumber?.runtimeType})');
+
+    final parsedCallNumber = _parseIntOrNull(rawCallNumber);
+    final parsedTableNumber = _parseIntOrNull(rawTableNumber);
+    final parsedOrderNumber = rawOrderNumber?.toString();
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Parsed callNumber: $parsedCallNumber');
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Parsed tableNumber: $parsedTableNumber');
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Parsed orderNumber: $parsedOrderNumber');
+
+    // Parse ID - handle various formats
+    final rawId = data['orderId'] ?? data['order_id'] ?? data['id'];
+    final parsedId = rawId?.toString() ?? 'unknown_${DateTime.now().millisecondsSinceEpoch}';
+    debugPrint('🔧 [OsdOrder.fromWebSocketEvent] Parsed ID: $parsedId');
+
+    // Parse createdAt - handle various formats
+    DateTime parsedCreatedAt = DateTime.now();
+    final rawCreatedAt = data['createdAt'] ?? data['created_at'];
+    if (rawCreatedAt != null) {
+      if (rawCreatedAt is String) {
+        parsedCreatedAt = DateTime.tryParse(rawCreatedAt) ?? DateTime.now();
+      } else if (rawCreatedAt is int) {
+        // Handle timestamp in milliseconds
+        parsedCreatedAt = DateTime.fromMillisecondsSinceEpoch(rawCreatedAt);
+      }
+    }
+
+    // Parse kitchenCompletedAt
+    DateTime? parsedKitchenCompletedAt;
+    final rawKitchenCompletedAt = data['kitchenCompletedAt'] ?? data['kitchen_completed_at'];
+    if (rawKitchenCompletedAt != null && rawKitchenCompletedAt is String) {
+      parsedKitchenCompletedAt = DateTime.tryParse(rawKitchenCompletedAt);
+    }
+
+    // Parse servedAt
+    DateTime? parsedServedAt;
+    final rawServedAt = data['servedAt'] ?? data['served_at'];
+    if (rawServedAt != null && rawServedAt is String) {
+      parsedServedAt = DateTime.tryParse(rawServedAt);
     }
 
     return OsdOrder(
-      id: (data['orderId'] ?? data['order_id'] ?? data['id']) as String,
-      callNumber:
-          (data['callNumber'] ?? data['call_number']) as int?,
-      tableNumber:
-          (data['tableNumber'] ?? data['table_number']) as int?,
-      orderNumber:
-          (data['orderNumber'] ?? data['order_number']) as String?,
+      id: parsedId,
+      callNumber: parsedCallNumber,
+      tableNumber: parsedTableNumber,
+      orderNumber: parsedOrderNumber,
       diningOption:
-          (data['diningOption'] ?? data['dining_option']) as String?,
+          (data['diningOption'] ?? data['dining_option'])?.toString(),
       displayStatus: derivedDisplayStatus,
       kitchenStatus:
-          (data['kitchenStatus'] ?? data['kitchen_status']) as String?,
-      createdAt: data['createdAt'] != null
-          ? DateTime.parse(data['createdAt'] as String)
-          : (data['created_at'] != null
-              ? DateTime.parse(data['created_at'] as String)
-              : DateTime.now()),
-      kitchenCompletedAt: (data['kitchenCompletedAt'] ??
-                  data['kitchen_completed_at']) !=
-              null
-          ? DateTime.parse((data['kitchenCompletedAt'] ??
-              data['kitchen_completed_at']) as String)
-          : null,
-      servedAt: (data['servedAt'] ?? data['served_at']) != null
-          ? DateTime.parse(
-              (data['servedAt'] ?? data['served_at']) as String)
-          : null,
+          (data['kitchenStatus'] ?? data['kitchen_status'])?.toString(),
+      createdAt: parsedCreatedAt,
+      kitchenCompletedAt: parsedKitchenCompletedAt,
+      readyAt: derivedReadyAt,
+      servedAt: parsedServedAt,
     );
   }
 
@@ -261,6 +357,7 @@ class OsdOrder {
       'kitchen_status': kitchenStatus,
       'created_at': createdAt.toIso8601String(),
       'kitchen_completed_at': kitchenCompletedAt?.toIso8601String(),
+      'ready_at': readyAt?.toIso8601String(),
       'served_at': servedAt?.toIso8601String(),
     };
   }
@@ -276,6 +373,7 @@ class OsdOrder {
     String? kitchenStatus,
     DateTime? createdAt,
     DateTime? kitchenCompletedAt,
+    DateTime? readyAt,
     DateTime? servedAt,
   }) {
     return OsdOrder(
@@ -288,6 +386,7 @@ class OsdOrder {
       kitchenStatus: kitchenStatus ?? this.kitchenStatus,
       createdAt: createdAt ?? this.createdAt,
       kitchenCompletedAt: kitchenCompletedAt ?? this.kitchenCompletedAt,
+      readyAt: readyAt ?? this.readyAt,
       servedAt: servedAt ?? this.servedAt,
     );
   }
@@ -305,6 +404,14 @@ class OsdOrder {
 
   @override
   int get hashCode => id.hashCode;
+
+  /// Helper to parse int from dynamic value (handles String or int)
+  static int? _parseIntOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
 }
 
 /// Order priority levels for display styling

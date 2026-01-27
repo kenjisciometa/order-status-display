@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/login_screen.dart';
@@ -11,6 +12,12 @@ import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Hide Android navigation bar and status bar for immersive mode
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+    overlays: [],
+  );
 
   // Load environment variables
   try {
@@ -41,6 +48,95 @@ void main() async {
 class OSDApp extends StatelessWidget {
   const OSDApp({super.key});
 
+  static ThemeData _buildDarkTheme() {
+    return ThemeData(
+      primarySwatch: Colors.blue,
+      fontFamily: 'Roboto',
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF1A1A2E), // Dark navy
+      cardColor: const Color(0xFF16213E),
+      colorScheme: const ColorScheme.dark(
+        surface: Color(0xFF1A1A2E),
+        onSurface: Colors.white,
+        primary: Color(0xFF0F3460), // Deep blue
+        onPrimary: Colors.white,
+        secondary: Color(0xFF00D9FF), // Cyan accent
+        onSecondary: Colors.black,
+      ),
+      cardTheme: const CardThemeData(
+        color: Color(0xFF16213E),
+        elevation: 4,
+        margin: EdgeInsets.all(8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF0F3460),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+        actionsIconTheme: IconThemeData(color: Colors.white),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF00D9FF),
+          foregroundColor: Colors.black,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData _buildLightTheme() {
+    return ThemeData(
+      primarySwatch: Colors.blue,
+      fontFamily: 'Roboto',
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Light gray
+      cardColor: Colors.white,
+      colorScheme: const ColorScheme.light(
+        surface: Color(0xFFF5F5F5),
+        onSurface: Color(0xFF1A1A2E),
+        primary: Color(0xFF2196F3), // Blue
+        onPrimary: Colors.white,
+        secondary: Color(0xFF0288D1), // Light blue
+        onSecondary: Colors.white,
+      ),
+      cardTheme: CardThemeData(
+        color: Colors.white,
+        elevation: 4,
+        margin: const EdgeInsets.all(8),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF2196F3),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+        actionsIconTheme: IconThemeData(color: Colors.white),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2196F3),
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -51,49 +147,10 @@ class OSDApp extends StatelessWidget {
       ],
       child: Consumer<SettingsService>(
         builder: (context, settingsService, child) {
+          final isDarkMode = settingsService.isDarkMode;
           return MaterialApp(
             title: 'Order Status Display',
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              fontFamily: 'Roboto',
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-              brightness: Brightness.dark,
-              scaffoldBackgroundColor: const Color(0xFF1A1A2E), // Dark navy
-              cardColor: const Color(0xFF16213E),
-              colorScheme: const ColorScheme.dark(
-                surface: Color(0xFF1A1A2E),
-                onSurface: Colors.white,
-                primary: Color(0xFF0F3460), // Deep blue
-                onPrimary: Colors.white,
-                secondary: Color(0xFF00D9FF), // Cyan accent
-                onSecondary: Colors.black,
-              ),
-              cardTheme: const CardThemeData(
-                color: Color(0xFF16213E),
-                elevation: 4,
-                margin: EdgeInsets.all(8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-              ),
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Color(0xFF0F3460),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                iconTheme: IconThemeData(color: Colors.white),
-                actionsIconTheme: IconThemeData(color: Colors.white),
-              ),
-              elevatedButtonTheme: ElevatedButtonThemeData(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00D9FF),
-                  foregroundColor: Colors.black,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
+            theme: isDarkMode ? _buildDarkTheme() : _buildLightTheme(),
             home: const InitialScreen(),
             debugShowCheckedModeBanner: false,
           );

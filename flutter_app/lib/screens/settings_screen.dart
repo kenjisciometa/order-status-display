@@ -24,11 +24,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final authService = Provider.of<AuthService>(context);
     final deviceService = Provider.of<DeviceControlService>(context);
     final webSocketService = OsdWebSocketService.instance;
+    final isDarkMode = settingsService.isDarkMode;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F3460),
+        backgroundColor: isDarkMode ? const Color(0xFF0F3460) : const Color(0xFF2196F3),
         title: const Text('Settings'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -71,22 +72,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
+          // Appearance settings section
+          _buildSectionHeader('APPEARANCE'),
+          _buildSwitchTile(
+            title: 'Dark Mode',
+            subtitle: 'Switch between dark and light theme',
+            value: settingsService.isDarkMode,
+            onChanged: (value) => settingsService.setDarkMode(value),
+          ),
+
+          const SizedBox(height: 24),
+
           // Display settings section
           _buildSectionHeader('DISPLAY SETTINGS'),
           _buildPrimaryDisplayTypeSelector(settingsService),
           const SizedBox(height: 8),
           _buildSwitchTile(
-            title: 'Show Call Number',
-            subtitle: 'Display order call number as priority',
-            value: settingsService.showCallNumber,
-            onChanged: (value) => settingsService.setShowCallNumber(value),
+            title: 'Show Elapsed Time (Now Cooking)',
+            subtitle: 'Display elapsed time on Now Cooking cards',
+            value: settingsService.showElapsedTimeNowCooking,
+            onChanged: (value) => settingsService.setShowElapsedTimeNowCooking(value),
           ),
           _buildSwitchTile(
-            title: 'Show Table Number',
-            subtitle: 'Display table number as fallback',
-            value: settingsService.showTableNumber,
-            onChanged: (value) => settingsService.setShowTableNumber(value),
+            title: "Show Elapsed Time (It's Ready)",
+            subtitle: "Display elapsed time on It's Ready cards",
+            value: settingsService.showElapsedTimeReady,
+            onChanged: (value) => settingsService.setShowElapsedTimeReady(value),
           ),
+          _buildHighlightDurationSelector(settingsService),
 
           const SizedBox(height: 24),
 
@@ -101,6 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               AudioService.instance.setSoundEnabled(value);
             },
           ),
+          _buildSoundTypeSelector(settingsService),
           _buildActionTile(
             title: 'Test Sound',
             subtitle: 'Play ready sound for testing',
@@ -344,6 +358,170 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// Build Sound Type selector
+  Widget _buildSoundTypeSelector(SettingsService settingsService) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16213E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Sound Type',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Select notification sound for ready orders',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: ReadySoundType.values.map((type) {
+              final isSelected = settingsService.readySoundType == type;
+              return InkWell(
+                onTap: () {
+                  settingsService.setReadySoundType(type);
+                  // Play the sound when selected
+                  AudioService.instance.playSoundType(type);
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: isSelected
+                        ? Border.all(color: const Color(0xFF00D9FF), width: 1.5)
+                        : Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getSoundIcon(type),
+                        size: 18,
+                        color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        type.displayName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getSoundIcon(ReadySoundType type) {
+    switch (type) {
+      case ReadySoundType.slick:
+        return Icons.notifications_active;
+      case ReadySoundType.bell:
+        return Icons.notifications;
+      case ReadySoundType.quick:
+        return Icons.flash_on;
+    }
+  }
+
+  /// Build Highlight Duration selector for newly ready orders
+  Widget _buildHighlightDurationSelector(SettingsService settingsService) {
+    final currentSeconds = settingsService.highlightDurationSeconds;
+    // Options: 30 seconds, 1 minute, 2 minutes, 3 minutes, 5 minutes
+    final options = [
+      (30, '30 seconds'),
+      (60, '1 minute'),
+      (120, '2 minutes'),
+      (180, '3 minutes'),
+      (300, '5 minutes'),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16213E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Ready Order Highlight Duration',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Duration to highlight newly ready orders',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: options.map((option) {
+              final isSelected = currentSeconds == option.$1;
+              return InkWell(
+                onTap: () => settingsService.setHighlightDurationSeconds(option.$1),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: isSelected
+                        ? Border.all(color: const Color(0xFF00D9FF), width: 1.5)
+                        : Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Text(
+                    option.$2,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Build Primary Display Type selector (F-009)

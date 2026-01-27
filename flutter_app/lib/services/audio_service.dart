@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'settings_service.dart';
 
 /// Audio Service for OSD
 ///
@@ -34,21 +35,35 @@ class AudioService {
     }
   }
 
-  /// Play the "order ready" notification sound
+  /// Play the "order ready" notification sound based on settings
   Future<void> playOrderReadySound() async {
     if (!_initialized || !_soundEnabled) return;
 
     try {
-      debugPrint('🔔 [OSD AUDIO] Playing order ready sound');
-      await _player.play(AssetSource('sounds/order_ready.mp3'));
+      final soundType = SettingsService.instance.readySoundType;
+      final assetPath = soundType.assetPath;
+      debugPrint('🔔 [OSD AUDIO] Playing order ready sound: ${soundType.displayName} ($assetPath)');
+      await _player.play(AssetSource(assetPath));
     } catch (e) {
       debugPrint('❌ [OSD AUDIO] Failed to play sound: $e');
       // Try fallback sound
       try {
-        await _player.play(AssetSource('sounds/notification.mp3'));
+        await _player.play(AssetSource('sounds/order_ready.mp3'));
       } catch (e2) {
         debugPrint('❌ [OSD AUDIO] Fallback sound also failed: $e2');
       }
+    }
+  }
+
+  /// Play a specific sound type (for testing)
+  Future<void> playSoundType(ReadySoundType soundType) async {
+    if (!_initialized) return;
+
+    try {
+      debugPrint('🔔 [OSD AUDIO] Playing test sound: ${soundType.displayName}');
+      await _player.play(AssetSource(soundType.assetPath));
+    } catch (e) {
+      debugPrint('❌ [OSD AUDIO] Failed to play test sound: $e');
     }
   }
 
