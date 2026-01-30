@@ -812,37 +812,51 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
       List<OsdOrder> highlightedOrders, bool isDarkMode, bool showElapsedTime) {
     // Display highlighted orders in a row (up to 3 per row)
     // Each highlighted card is larger and more prominent
+    // For 4+ orders, maintain 1/3 size for consistency
     final rows = <Widget>[];
-    final ordersPerRow = highlightedOrders.length == 1 ? 1 : (highlightedOrders.length == 2 ? 2 : 3);
+
+    // Determine layout based on total count
+    // 1 order: 1 per row (full width)
+    // 2 orders: 2 per row (half width each)
+    // 3+ orders: always 3 per row (1/3 width each)
+    final ordersPerRow = highlightedOrders.length <= 2 ? highlightedOrders.length : 3;
 
     for (var i = 0; i < highlightedOrders.length; i += ordersPerRow) {
       final rowOrders = highlightedOrders.skip(i).take(ordersPerRow).toList();
+      final actualItemsInRow = rowOrders.length;
+
       rows.add(
         Padding(
           padding: EdgeInsets.only(bottom: i + ordersPerRow < highlightedOrders.length ? 8 : 0),
           child: Row(
-            children: rowOrders.asMap().entries.map((entry) {
-              final index = entry.key;
-              final order = entry.value;
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: index == 0 ? 0 : 4,
-                    right: index == rowOrders.length - 1 ? 0 : 4,
-                  ),
-                  child: AspectRatio(
-                    aspectRatio: highlightedOrders.length == 1 ? 2.5 : 1.5, // Taller for highlighted
-                    child: OrderCard(
-                      order: order,
-                      isReady: true,
-                      isDarkMode: isDarkMode,
-                      isHighlighted: true,
-                      showElapsedTime: showElapsedTime,
+            children: [
+              // Actual order cards
+              ...rowOrders.asMap().entries.map((entry) {
+                final index = entry.key;
+                final order = entry.value;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: index == 0 ? 0 : 4,
+                      right: index == actualItemsInRow - 1 && actualItemsInRow == ordersPerRow ? 0 : 4,
+                    ),
+                    child: AspectRatio(
+                      aspectRatio: highlightedOrders.length == 1 ? 2.5 : 1.5, // Taller for highlighted
+                      child: OrderCard(
+                        order: order,
+                        isReady: true,
+                        isDarkMode: isDarkMode,
+                        isHighlighted: true,
+                        showElapsedTime: showElapsedTime,
+                      ),
                     ),
                   ),
-                ),
-              );
-            }).toList(),
+                );
+              }),
+              // Add empty spacers to maintain 1/3 size for 4+ orders (when row has fewer than 3 items)
+              if (highlightedOrders.length >= 3)
+                ...List.generate(ordersPerRow - actualItemsInRow, (_) => const Expanded(child: SizedBox())),
+            ],
           ),
         ),
       );
