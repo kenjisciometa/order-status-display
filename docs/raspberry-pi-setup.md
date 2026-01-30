@@ -162,7 +162,76 @@ dependencies:
 
 ## 6. 自動起動の設定
 
-### autostartを使用
+### 方法1: systemdサービスを使用（推奨）
+
+systemdサービスを使用すると、より安定した自動起動が可能です。
+
+#### サービスファイルの作成
+
+```bash
+sudo nano /etc/systemd/system/osd.service
+```
+
+以下を貼り付け：
+
+```ini
+[Unit]
+Description=Order Status Display
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/osd_app/build/linux/arm64/release/bundle
+ExecStart=/home/pi/osd_app/build/linux/arm64/release/bundle/osd_app
+Restart=always
+RestartSec=5
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+Environment=SECRET_TOOL_BACKEND=file
+
+[Install]
+WantedBy=graphical.target
+```
+
+#### サービスの有効化と起動
+
+```bash
+# サービスを有効化して起動
+sudo systemctl enable --now osd
+
+# ステータス確認
+systemctl status osd
+```
+
+#### サービス管理コマンド
+
+```bash
+# サービスの停止
+sudo systemctl stop osd
+
+# サービスの再起動
+sudo systemctl restart osd
+
+# ログの確認
+journalctl -u osd -n 50 --no-pager
+
+# リアルタイムでログを監視
+journalctl -u osd -f
+```
+
+#### サービスファイル修正時
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart osd
+```
+
+### 方法2: autostartを使用
+
+デスクトップ環境のautostart機能を使用する方法です。
 
 ```bash
 mkdir -p ~/.config/autostart
