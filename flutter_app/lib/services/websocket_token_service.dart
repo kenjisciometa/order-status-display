@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client_service.dart';
 
 /// WebSocket Token Service for OSD
@@ -15,7 +15,7 @@ class WebSocketTokenService {
   // Refresh token when it has less than 7 days until expiry
   static const int _refreshThresholdDays = 7;
 
-  final FlutterSecureStorage _secureStorage;
+  SharedPreferences? _prefs;
   final ApiClientService _apiClient;
 
   // Cached token data
@@ -29,16 +29,13 @@ class WebSocketTokenService {
     return _instance!;
   }
 
-  WebSocketTokenService._internal()
-      : _secureStorage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(
-            encryptedSharedPreferences: true,
-          ),
-          iOptions: IOSOptions(
-            accessibility: KeychainAccessibility.first_unlock_this_device,
-          ),
-        ),
-        _apiClient = ApiClientService.instance;
+  WebSocketTokenService._internal() : _apiClient = ApiClientService.instance;
+
+  /// Get SharedPreferences instance (lazy initialization)
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
 
   /// Initialize and load cached token
   Future<void> initialize() async {
@@ -48,11 +45,12 @@ class WebSocketTokenService {
     }
   }
 
-  /// Load cached token from secure storage
+  /// Load cached token from storage
   Future<void> _loadCachedToken() async {
     try {
-      _cachedToken = await _secureStorage.read(key: _tokenKey);
-      final expiryStr = await _secureStorage.read(key: _tokenExpiryKey);
+      final prefs = await _getPrefs();
+      _cachedToken = prefs.getString(_tokenKey);
+      final expiryStr = prefs.getString(_tokenExpiryKey);
 
       if (expiryStr != null) {
         _cachedExpiry = DateTime.tryParse(expiryStr);
@@ -71,12 +69,12 @@ class WebSocketTokenService {
     }
   }
 
-  /// Save token to secure storage
+  /// Save token to storage
   Future<void> _saveToken(String token, DateTime expiry) async {
     try {
-      await _secureStorage.write(key: _tokenKey, value: token);
-      await _secureStorage.write(
-          key: _tokenExpiryKey, value: expiry.toIso8601String());
+      final prefs = await _getPrefs();
+      await prefs.setString(_tokenKey, token);
+      await prefs.setString(_tokenExpiryKey, expiry.toIso8601String());
       _cachedToken = token;
       _cachedExpiry = expiry;
       if (kDebugMode) {
@@ -92,8 +90,9 @@ class WebSocketTokenService {
   /// Clear stored token
   Future<void> clearToken() async {
     try {
-      await _secureStorage.delete(key: _tokenKey);
-      await _secureStorage.delete(key: _tokenExpiryKey);
+      final prefs = await _getPrefs();
+      await prefs.remove(_tokenKey);
+      await prefs.remove(_tokenExpiryKey);
       _cachedToken = null;
       _cachedExpiry = null;
       if (kDebugMode) {

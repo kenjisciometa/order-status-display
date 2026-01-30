@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../config/api_endpoints.dart';
@@ -49,12 +49,12 @@ class ApiClientService {
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _deviceIdKey = 'device_id';
-  static const String _autoLoginKey = 'auto_login_enabled';
+  static const String _autoLoginKey = 'osd_auto_login_enabled';
   static const String _emailKey = 'stored_email';
   static const String _passwordKey = 'stored_password';
 
   late final Dio _dio;
-  late final FlutterSecureStorage _secureStorage;
+  SharedPreferences? _prefs;
   String? _deviceId;
 
   /// Singleton instance
@@ -65,15 +65,13 @@ class ApiClientService {
   }
 
   ApiClientService._internal() {
-    _secureStorage = const FlutterSecureStorage(
-      aOptions: AndroidOptions(
-        encryptedSharedPreferences: true,
-      ),
-      iOptions: IOSOptions(
-        accessibility: KeychainAccessibility.first_unlock_this_device,
-      ),
-    );
     _initializeDio();
+  }
+
+  /// Get SharedPreferences instance (lazy initialization)
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
   }
 
   void _initializeDio() {
@@ -99,10 +97,11 @@ class ApiClientService {
 
   /// Get or create device ID
   Future<String> _getOrCreateDeviceId() async {
-    String? deviceId = await _secureStorage.read(key: _deviceIdKey);
+    final prefs = await _getPrefs();
+    String? deviceId = prefs.getString(_deviceIdKey);
     if (deviceId == null) {
       deviceId = const Uuid().v4();
-      await _secureStorage.write(key: _deviceIdKey, value: deviceId);
+      await prefs.setString(_deviceIdKey, deviceId);
     }
     return deviceId;
   }
@@ -118,26 +117,30 @@ class ApiClientService {
   Future<void> setAuthToken(String token, [String? refreshToken]) async {
     debugPrint(
         '💾 [OSD API CLIENT] Storing auth token - length: ${token.length}');
-    await _secureStorage.write(key: _tokenKey, value: token);
+    final prefs = await _getPrefs();
+    await prefs.setString(_tokenKey, token);
     if (refreshToken != null) {
-      await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
+      await prefs.setString(_refreshTokenKey, refreshToken);
     }
   }
 
   /// Get authentication token
   Future<String?> getAuthToken() async {
-    return await _secureStorage.read(key: _tokenKey);
+    final prefs = await _getPrefs();
+    return prefs.getString(_tokenKey);
   }
 
   /// Get refresh token
   Future<String?> getRefreshToken() async {
-    return await _secureStorage.read(key: _refreshTokenKey);
+    final prefs = await _getPrefs();
+    return prefs.getString(_refreshTokenKey);
   }
 
   /// Clear authentication data
   Future<void> clearAuthData() async {
-    await _secureStorage.delete(key: _tokenKey);
-    await _secureStorage.delete(key: _refreshTokenKey);
+    final prefs = await _getPrefs();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_refreshTokenKey);
   }
 
   // ===================
@@ -146,37 +149,41 @@ class ApiClientService {
 
   /// Set auto-login enabled
   Future<void> setAutoLoginEnabled(bool enabled) async {
-    await _secureStorage.write(
-        key: _autoLoginKey, value: enabled ? 'true' : 'false');
+    final prefs = await _getPrefs();
+    await prefs.setBool(_autoLoginKey, enabled);
   }
 
   /// Check if auto-login is enabled
   Future<bool> isAutoLoginEnabled() async {
-    final value = await _secureStorage.read(key: _autoLoginKey);
-    return value == 'true';
+    final prefs = await _getPrefs();
+    return prefs.getBool(_autoLoginKey) ?? false;
   }
 
   /// Store credentials for auto-login
   Future<void> storeCredentials(String email, String password) async {
-    await _secureStorage.write(key: _emailKey, value: email);
-    await _secureStorage.write(key: _passwordKey, value: password);
+    final prefs = await _getPrefs();
+    await prefs.setString(_emailKey, email);
+    await prefs.setString(_passwordKey, password);
   }
 
   /// Get stored email
   Future<String?> getStoredEmail() async {
-    return await _secureStorage.read(key: _emailKey);
+    final prefs = await _getPrefs();
+    return prefs.getString(_emailKey);
   }
 
   /// Get stored password
   Future<String?> getStoredPassword() async {
-    return await _secureStorage.read(key: _passwordKey);
+    final prefs = await _getPrefs();
+    return prefs.getString(_passwordKey);
   }
 
   /// Clear stored credentials
   Future<void> clearCredentials() async {
-    await _secureStorage.delete(key: _emailKey);
-    await _secureStorage.delete(key: _passwordKey);
-    await _secureStorage.delete(key: _autoLoginKey);
+    final prefs = await _getPrefs();
+    await prefs.remove(_emailKey);
+    await prefs.remove(_passwordKey);
+    await prefs.remove(_autoLoginKey);
   }
 
   /// Clear all stored data (logout)
