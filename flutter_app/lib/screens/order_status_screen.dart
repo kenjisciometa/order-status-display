@@ -601,14 +601,15 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                       children: [
                         Icon(
                           isReady ? Icons.check_circle_outline : Icons.restaurant,
-                          size: 48,
+                          size: 144,
                           color: textColor.withOpacity(0.3),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 24),
                         Text(
                           emptyMessage,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 48,
+                            fontWeight: FontWeight.w500,
                             color: textColor.withOpacity(0.5),
                           ),
                         ),
