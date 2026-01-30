@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/auth_service.dart';
 import 'display_selection_screen.dart';
 import 'order_status_screen.dart';
@@ -22,6 +23,38 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = true;
   bool _obscurePassword = true;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAutoLogin();
+  }
+
+  /// Check if auto-login is configured and perform auto-login
+  Future<void> _checkAutoLogin() async {
+    // Only auto-login in kiosk mode
+    final platformMode = dotenv.env['PLATFORM_MODE'] ?? 'standard';
+    if (platformMode != 'kiosk') {
+      return;
+    }
+
+    final autoEmail = dotenv.env['AUTO_LOGIN_EMAIL'] ?? '';
+    final autoPassword = dotenv.env['AUTO_LOGIN_PASSWORD'] ?? '';
+
+    if (autoEmail.isNotEmpty && autoPassword.isNotEmpty) {
+      debugPrint('OSD: Auto-login enabled for kiosk mode');
+
+      // Set credentials and trigger auto-login
+      _emailController.text = autoEmail;
+      _passwordController.text = autoPassword;
+
+      // Small delay to ensure widget is fully built
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        _handleLogin();
+      }
+    }
+  }
 
   @override
   void dispose() {

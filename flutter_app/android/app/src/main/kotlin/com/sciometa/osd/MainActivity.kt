@@ -1,4 +1,4 @@
-package com.sciometa.osd_app
+package com.sciometa.osd
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -320,28 +320,89 @@ class OsdWebSocketService extends ChangeNotifier {
 
     // NEW ORDER: order_created → Add to "Now Cooking"
     _socket!.on('order_created', (data) {
-      debugPrint('🆕 [OSD←BOS] New order received via order_created');
+      debugPrint('🆕 [OSD←POS] New order received via order_created');
       debugPrint('   📱 Raw data type: ${data.runtimeType}');
+      debugPrint('   📱 Raw data keys: ${data is Map<String, dynamic> ? data.keys.toList() : 'N/A'}');
 
       try {
         if (data is Map<String, dynamic>) {
           // Send ACK if required (Reliable Messaging)
           _sendMessageAck(data);
 
-          final orderData =
-              data['orderData'] as Map<String, dynamic>? ?? data;
-          final osdOrder = OsdOrder.fromWebSocketEvent(orderData);
+          // Extract orderData from nested structure (same as KDS/SDS)
+          final orderData = data['orderData'] as Map<String, dynamic>? ?? data;
+          debugPrint('   📦 Extracted orderData keys: ${orderData.keys.toList()}');
+          debugPrint('   📦 Order ID: ${orderData['orderId'] ?? orderData['id'] ?? 'N/A'}');
+          debugPrint('   📦 Order Number: ${orderData['orderNumber'] ?? orderData['order_number'] ?? 'N/A'}');
 
-          debugPrint('   📦 Parsed Order ID: ${osdOrder.id}');
-          debugPrint('   📞 Call Number: ${osdOrder.callNumber}');
+          // Try to parse OsdOrder, but don't fail if parsing fails
+          // OSD will fetch from DB anyway, so we just need to trigger the callback
+          OsdOrder? osdOrder;
+          try {
+            osdOrder = OsdOrder.fromWebSocketEvent(orderData);
+            debugPrint('   ✅ Parsed OsdOrder: ID=${osdOrder.id}, CallNumber=${osdOrder.callNumber}');
+          } catch (parseError, parseStackTrace) {
+            debugPrint('   ⚠️ OSD: Failed to parse OsdOrder from WebSocket data: $parseError');
+            debugPrint('   ⚠️ OSD: This is OK - will fetch from DB instead');
+            debugPrint('   ⚠️ OSD: Parse stack trace: $parseStackTrace');
 
-          _notificationsReceived++;
-          onNewOrder?.call(osdOrder);
-          notifyListeners();
+            // Create a minimal OsdOrder with just the ID to trigger DB fetch
+            // This ensures _loadOrders() is called even if parsing fails
+            final orderId = orderData['orderId'] ?? orderData['order_id'] ?? orderData['id']?.toString() ?? 'unknown';
+
+            // Helper to parse int from dynamic value
+            int? parseIntOrNull(dynamic value) {
+              if (value == null) return null;
+              if (value is int) return value;
+              if (value is String) return int.tryParse(value);
+              return null;
+            }
+
+            osdOrder = OsdOrder(
+              id: orderId,
+              callNumber: parseIntOrNull(orderData['callNumber'] ?? orderData['call_number']),
+              tableNumber: parseIntOrNull(orderData['tableNumber'] ?? orderData['table_number']),
+              orderNumber: orderData['orderNumber']?.toString() ?? orderData['order_number']?.toString(),
+              diningOption: orderData['diningOption']?.toString() ?? orderData['dining_option']?.toString(),
+              displayStatus: 'pending', // Default to pending - DB fetch will get correct status
+              createdAt: DateTime.now(),
+            );
+            debugPrint('   ✅ Created minimal OsdOrder for DB fetch trigger: ID=$orderId');
+          }
+
+          if (osdOrder != null) {
+            _notificationsReceived++;
+            onNewOrder?.call(osdOrder);
+            notifyListeners();
+            debugPrint('   ✅ onNewOrder callback executed successfully');
+          } else {
+            debugPrint('   ⚠️ OSD: osdOrder is null, skipping callback');
+          }
+        } else {
+          debugPrint('   ❌ OSD: Invalid data format: ${data.runtimeType}');
         }
       } catch (e, stackTrace) {
         debugPrint('❌ OSD: Error processing order_created: $e');
         debugPrint('   Stack trace: $stackTrace');
+        // Even on error, try to trigger DB fetch if we can extract order ID
+        try {
+          if (data is Map<String, dynamic>) {
+            final orderData = data['orderData'] as Map<String, dynamic>? ?? data;
+            final orderId = orderData['orderId'] ?? orderData['order_id'] ?? orderData['id']?.toString();
+            if (orderId != null) {
+              debugPrint('   🔄 OSD: Attempting to trigger DB fetch with orderId: $orderId');
+              final minimalOrder = OsdOrder(
+                id: orderId.toString(),
+                displayStatus: 'pending',
+                createdAt: DateTime.now(),
+              );
+              onNewOrder?.call(minimalOrder);
+              debugPrint('   ✅ OSD: DB fetch triggered despite error');
+            }
+          }
+        } catch (fallbackError) {
+          debugPrint('   ❌ OSD: Failed to trigger fallback DB fetch: $fallbackError');
+        }
       }
     });
 

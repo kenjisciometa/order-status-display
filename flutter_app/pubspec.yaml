@@ -2,7 +2,7 @@ name: osd_app
 description: Order Status Display System for Restaurant POS
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -19,9 +19,9 @@ dependencies:
   http: ^1.1.0
   dio: ^5.4.0
 
-  # Local Storage
+  # Local Storage (unified - works on all platforms including Linux/Raspberry Pi)
   shared_preferences: ^2.2.2
-  flutter_secure_storage: ^9.0.0
+  # Note: flutter_secure_storage removed to avoid keyring issues on Linux/Raspberry Pi
 
   # Utilities - UUID
   uuid: ^4.2.1
@@ -43,6 +43,9 @@ dependencies:
   intl: ^0.19.0
   flutter_dotenv: ^5.1.0
   device_info_plus: ^9.1.0
+
+  # Window management (for desktop fullscreen/kiosk mode)
+  window_manager: ^0.4.3
 
 dev_dependencies:
   flutter_test:
