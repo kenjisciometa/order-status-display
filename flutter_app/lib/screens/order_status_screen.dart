@@ -42,6 +42,11 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   Timer? _clockTimer; // UI update timer for elapsed time display (KDS-style)
   Timer? _highlightTimer; // Timer to update highlight state
 
+  // Kiosk mode: Auto-hide mouse cursor
+  bool _showCursor = true;
+  Timer? _cursorHideTimer;
+  static const _cursorHideDelay = Duration(seconds: 3);
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +57,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   void dispose() {
     _clockTimer?.cancel();
     _highlightTimer?.cancel();
+    _cursorHideTimer?.cancel();
     _webSocketService.disconnect();
     super.dispose();
   }
@@ -304,38 +310,63 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
     return DateTime.now().difference(readyTime) <= _settingsService.highlightDuration;
   }
 
+  /// Reset cursor hide timer (called on mouse movement)
+  void _resetCursorHideTimer() {
+    // Show cursor immediately when mouse moves
+    if (!_showCursor) {
+      setState(() {
+        _showCursor = true;
+      });
+    }
+
+    // Cancel existing timer and start a new one
+    _cursorHideTimer?.cancel();
+    _cursorHideTimer = Timer(_cursorHideDelay, () {
+      if (mounted) {
+        setState(() {
+          _showCursor = false;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsService = Provider.of<SettingsService>(context);
     final isDarkMode = settingsService.isDarkMode;
 
-    return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
-      body: Stack(
-        children: [
-          // Main content (full screen)
-          _isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                    color: isDarkMode ? const Color(0xFF00D9FF) : const Color(0xFF2196F3),
-                  ),
-                )
-              : _buildMainContent(isDarkMode, settingsService.showElapsedTimeNowCooking, settingsService.showElapsedTimeReady),
+    return MouseRegion(
+      cursor: _showCursor ? SystemMouseCursors.basic : SystemMouseCursors.none,
+      onHover: (_) => _resetCursorHideTimer(),
+      onEnter: (_) => _resetCursorHideTimer(),
+      child: Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
+        body: Stack(
+          children: [
+            // Main content (full screen)
+            _isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: isDarkMode ? const Color(0xFF00D9FF) : const Color(0xFF2196F3),
+                    ),
+                  )
+                : _buildMainContent(isDarkMode, settingsService.showElapsedTimeNowCooking, settingsService.showElapsedTimeReady),
 
-          // Connection indicator (top-right corner)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: _buildConnectionIndicator(isDarkMode),
-          ),
+            // Connection indicator (top-right corner)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: _buildConnectionIndicator(isDarkMode),
+            ),
 
-          // Settings button (top-left corner)
-          Positioned(
-            top: 8,
-            left: 8,
-            child: _buildSettingsButton(isDarkMode),
-          ),
-        ],
+            // Settings button (top-left corner)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: _buildSettingsButton(isDarkMode),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -605,12 +636,19 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                           color: textColor.withOpacity(0.3),
                         ),
                         const SizedBox(height: 24),
-                        Text(
-                          emptyMessage,
-                          style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w500,
-                            color: textColor.withOpacity(0.5),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              emptyMessage,
+                              style: TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w500,
+                                color: textColor.withOpacity(0.5),
+                              ),
+                              maxLines: 1,
+                            ),
                           ),
                         ),
                       ],
