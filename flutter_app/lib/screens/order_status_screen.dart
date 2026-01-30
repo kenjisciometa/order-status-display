@@ -565,7 +565,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 48,
                     fontWeight: FontWeight.bold,
                     color: textColor,
                   ),
