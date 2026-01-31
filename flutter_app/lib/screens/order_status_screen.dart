@@ -171,6 +171,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   }
 
   /// Connect to WebSocket server
+  /// 案1: connectWithInitialRetryを使用して起動時の接続を安定化
   Future<void> _connectWebSocket() async {
     final storeId = _settingsService.storeId;
     final organizationId = _settingsService.organizationId;
@@ -181,12 +182,15 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
       return;
     }
 
-    await _webSocketService.connect(
+    // 起動時リトライ強化: 最大5回、段階的に待機時間を増加しながら接続を試みる
+    await _webSocketService.connectWithInitialRetry(
       storeId,
       null,
       deviceId: displayId,
       displayId: displayId,
       organizationId: organizationId,
+      maxAttempts: 5,
+      baseDelay: const Duration(seconds: 2),
     );
   }
 

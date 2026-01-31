@@ -44,6 +44,9 @@ dependencies:
   flutter_dotenv: ^5.1.0
   device_info_plus: ^9.1.0
 
+  # Network monitoring (案2: WebSocket接続安定化)
+  connectivity_plus: ^6.0.3
+
   # Window management (for desktop fullscreen/kiosk mode)
   window_manager: ^0.4.3
 

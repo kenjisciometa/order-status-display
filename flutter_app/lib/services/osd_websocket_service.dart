@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'websocket_token_service.dart';
 import '../config/websocket_config.dart';
 import '../models/osd_order.dart';
@@ -41,6 +42,11 @@ class OsdWebSocketService extends ChangeNotifier {
   static const int maxReconnectAttempts = 30;
   bool _isReconnecting = false;
   bool _isAuthenticating = false;
+
+  // 案2: ネットワーク状態監視
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  bool _hasNetworkConnection = true;
+  bool _isInitialConnection = true; // 案1: 起動時リトライ用フラグ
 
   // Connection recovery
   bool _wasDisconnected = false;
@@ -112,6 +118,125 @@ class OsdWebSocketService extends ChangeNotifier {
     return _deviceMacAddress!;
   }
 
+  /// 案1: 起動時の接続リトライ強化
+  /// アプリ起動時に即座に接続を試みるのではなく、初期接続専用のリトライロジックを実行
+  Future<void> connectWithInitialRetry(
+    String storeId,
+    String? token, {
+    String? deviceId,
+    String? displayId,
+    String? organizationId,
+    int maxAttempts = 5,
+    Duration baseDelay = const Duration(seconds: 2),
+  }) async {
+    debugPrint('🚀 [OSD-INITIAL-CONNECT] Starting connection with initial retry (max $maxAttempts attempts)');
+
+    // ネットワーク監視を開始
+    _startNetworkMonitoring();
+
+    _isInitialConnection = true;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      debugPrint('🔄 [OSD-INITIAL-CONNECT] Attempt $attempt/$maxAttempts');
+
+      // ネットワーク接続を確認
+      if (!_hasNetworkConnection) {
+        debugPrint('⚠️ [OSD-INITIAL-CONNECT] No network connection, waiting...');
+        await Future.delayed(baseDelay);
+        continue;
+      }
+
+      try {
+        await connect(
+          storeId,
+          token,
+          deviceId: deviceId,
+          displayId: displayId,
+          organizationId: organizationId,
+        );
+
+        // 接続成功を少し待って確認
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (_isConnected) {
+          debugPrint('✅ [OSD-INITIAL-CONNECT] Connection succeeded on attempt $attempt');
+          _isInitialConnection = false;
+          return;
+        }
+      } catch (e) {
+        debugPrint('⚠️ [OSD-INITIAL-CONNECT] Attempt $attempt failed: $e');
+      }
+
+      if (attempt < maxAttempts) {
+        // 段階的に待機時間を増加（2秒、4秒、6秒...）
+        final delay = baseDelay * attempt;
+        debugPrint('⏳ [OSD-INITIAL-CONNECT] Waiting ${delay.inSeconds}s before next attempt...');
+        await Future.delayed(delay);
+      }
+    }
+
+    _isInitialConnection = false;
+    debugPrint('⚠️ [OSD-INITIAL-CONNECT] All initial attempts exhausted, falling back to normal reconnection logic');
+
+    // 全試行失敗後は通常の再接続ロジックに委ねる
+    if (!_isConnected && !_isReconnecting) {
+      _scheduleReconnect(
+        storeId,
+        deviceId: deviceId,
+        displayId: displayId,
+        organizationId: organizationId,
+      );
+    }
+  }
+
+  /// 案2: ネットワーク状態監視を開始
+  void _startNetworkMonitoring() {
+    _connectivitySubscription?.cancel();
+
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+      final hadConnection = _hasNetworkConnection;
+      _hasNetworkConnection = results.any((r) => r != ConnectivityResult.none);
+
+      debugPrint('📶 [OSD-NETWORK] Connectivity changed: $results (hasConnection: $_hasNetworkConnection)');
+
+      if (_hasNetworkConnection && !hadConnection) {
+        // ネットワーク復帰
+        debugPrint('📶 [OSD-NETWORK] Network restored');
+
+        if (!_isConnected && !_isReconnecting && !_isInitialConnection) {
+          debugPrint('📶 [OSD-NETWORK] Attempting immediate reconnection...');
+          _reconnectAttempts = 0; // リトライカウントをリセット
+
+          if (_currentStoreId != null) {
+            connect(
+              _currentStoreId!,
+              null,
+              deviceId: _currentDeviceId,
+              displayId: _currentDisplayId,
+              organizationId: _currentOrganizationId,
+            );
+          }
+        }
+      } else if (!_hasNetworkConnection && hadConnection) {
+        // ネットワーク喪失
+        debugPrint('📵 [OSD-NETWORK] Network lost, pausing reconnection attempts');
+        _reconnectTimer?.cancel();
+      }
+    });
+
+    // 初期状態を確認
+    Connectivity().checkConnectivity().then((results) {
+      _hasNetworkConnection = results.any((r) => r != ConnectivityResult.none);
+      debugPrint('📶 [OSD-NETWORK] Initial connectivity: $results (hasConnection: $_hasNetworkConnection)');
+    });
+  }
+
+  /// ネットワーク監視を停止
+  void _stopNetworkMonitoring() {
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = null;
+  }
+
   /// Connect to WebSocket server
   Future<void> connect(
     String storeId,
@@ -173,16 +298,18 @@ class OsdWebSocketService extends ChangeNotifier {
       final deviceMac = await _getDeviceMacAddress();
 
       // Create Socket.IO connection
+      // 案5: Socket.IOオプション最適化 - 内蔵の再接続も有効にしてバックアップとする
       _socket = IO.io(
           _serverUrl,
           IO.OptionBuilder()
               .setTransports(['websocket', 'polling'])
-              .setReconnectionAttempts(0)
+              .setReconnectionAttempts(3) // Socket.IOの短期的な自動再接続を有効化（バックアップ）
               .setTimeout(20000)
-              .enableForceNew()
+              .enableForceNew() // 古い接続の影響を排除
               .enableAutoConnect()
-              .setReconnectionDelay(3000)
-              .setReconnectionDelayMax(10000)
+              .enableReconnection() // 再接続機能を有効化
+              .setReconnectionDelay(1000) // 1秒から開始（より素早い再接続）
+              .setReconnectionDelayMax(5000) // 最大5秒（カスタム再接続との併用のため短め）
               .setAuth({'token': jwtToken})
               .setExtraHeaders({
                 'x-device-id': deviceMac,
@@ -664,13 +791,18 @@ class OsdWebSocketService extends ChangeNotifier {
   }
 
   /// Disconnect
-  Future<void> disconnect() async {
+  Future<void> disconnect({bool stopNetworkMonitoring = false}) async {
     debugPrint('OSD: Disconnecting from WebSocket server');
 
     _stopHeartbeat();
     _reconnectTimer?.cancel();
     _authTimeoutTimer?.cancel();
     _connectionTimeoutTimer?.cancel();
+
+    // ネットワーク監視を停止（完全切断時のみ）
+    if (stopNetworkMonitoring) {
+      _stopNetworkMonitoring();
+    }
 
     if (_socket != null) {
       _socket!.disconnect();
@@ -701,6 +833,7 @@ class OsdWebSocketService extends ChangeNotifier {
       'service_type': 'osd_websocket',
       'server_url': _serverUrl,
       'is_connected': _isConnected,
+      'has_network_connection': _hasNetworkConnection,
       'store_id': _currentStoreId,
       'device_id': _currentDeviceId,
       'organization_id': _currentOrganizationId,
@@ -716,6 +849,8 @@ class OsdWebSocketService extends ChangeNotifier {
         'order_restored_notification',
         'automatic_reconnection',
         'heartbeat_monitoring',
+        'network_state_monitoring', // 案2追加
+        'initial_connection_retry', // 案1追加
       ],
       'timestamp': DateTime.now().toIso8601String(),
     };
@@ -723,7 +858,8 @@ class OsdWebSocketService extends ChangeNotifier {
 
   @override
   void dispose() {
-    disconnect();
+    _stopNetworkMonitoring();
+    disconnect(stopNetworkMonitoring: true);
     super.dispose();
   }
 }
