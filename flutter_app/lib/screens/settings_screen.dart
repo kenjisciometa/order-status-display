@@ -4,6 +4,7 @@ import '../services/settings_service.dart';
 import '../services/auth_service.dart';
 import '../services/audio_service.dart';
 import '../services/device_control_service.dart';
+import '../services/api_client_service.dart';
 import '../services/osd_websocket_service.dart';
 import 'login_screen.dart';
 
@@ -19,6 +20,30 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool _isAutoLoginEnabled = false;
+  String? _storedEmail;
+  bool _isLoadingAutoLogin = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutoLoginSettings();
+  }
+
+  Future<void> _loadAutoLoginSettings() async {
+    final apiClient = ApiClientService.instance;
+    final isEnabled = await apiClient.isAutoLoginEnabled();
+    final email = await apiClient.getStoredEmail();
+
+    if (mounted) {
+      setState(() {
+        _isAutoLoginEnabled = isEnabled;
+        _storedEmail = email;
+        _isLoadingAutoLogin = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsService = Provider.of<SettingsService>(context);
@@ -217,7 +242,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Row 4: Sound Settings (full width - 2 columns)
+          // Row 4: Auto Login Settings
+          _buildSectionHeader('AUTO LOGIN SETTINGS'),
+          _buildAutoLoginSection(),
+
+          const SizedBox(height: 24),
+
+          // Row 5: Sound Settings (full width - 2 columns)
           _buildSectionHeader('SOUND SETTINGS'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -746,6 +777,641 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 size: 28,
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Build Auto Login settings section
+  Widget _buildAutoLoginSection() {
+    final settingsService = Provider.of<SettingsService>(context, listen: false);
+    final isDarkMode = settingsService.isDarkMode;
+
+    if (_isLoadingAutoLogin) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF16213E),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF00D9FF),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode
+              ? const Color(0xFF00D9FF).withOpacity(0.2)
+              : Colors.grey.shade300,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status row
+          Row(
+            children: [
+              Icon(
+                _isAutoLoginEnabled ? Icons.check_circle : Icons.cancel,
+                color: _isAutoLoginEnabled
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFF44336),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isAutoLoginEnabled ? 'Auto Login Enabled' : 'Auto Login Disabled',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
+                      ),
+                    ),
+                    if (_storedEmail != null && _isAutoLoginEnabled)
+                      Text(
+                        'Account: $_storedEmail',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.6)
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Description
+          Text(
+            _isAutoLoginEnabled
+                ? 'The app will automatically log in with the saved credentials when started.'
+                : 'Enable auto login to automatically sign in when the app starts.',
+            style: TextStyle(
+              fontSize: 16,
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.7)
+                  : Colors.grey.shade700,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Action buttons
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              if (_isAutoLoginEnabled) ...[
+                // Change credentials button
+                ElevatedButton.icon(
+                  onPressed: () => _showChangeCredentialsDialog(),
+                  icon: const Icon(Icons.edit, size: 20),
+                  label: const Text(
+                    'Change Credentials',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00D9FF),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                // Disable auto login button
+                OutlinedButton.icon(
+                  onPressed: () => _showDisableAutoLoginDialog(),
+                  icon: const Icon(Icons.power_settings_new, size: 20),
+                  label: const Text(
+                    'Disable Auto Login',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFF44336),
+                    side: const BorderSide(color: Color(0xFFF44336)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                // Enable auto login button
+                ElevatedButton.icon(
+                  onPressed: () => _showEnableAutoLoginDialog(),
+                  icon: const Icon(Icons.login, size: 20),
+                  label: const Text(
+                    'Enable Auto Login',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00D9FF),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show dialog to enable auto login
+  Future<void> _showEnableAutoLoginDialog() async {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+    bool obscurePassword = true;
+    String? errorMessage;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF16213E),
+          title: const Row(
+            children: [
+              Icon(Icons.login, color: Color(0xFF00D9FF)),
+              SizedBox(width: 12),
+              Text(
+                'Enable Auto Login',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Enter credentials to save for automatic login.',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration(
+                      'Password',
+                      Icons.lock_outlined,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.white54,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF44336).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Color(0xFFF44336),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage!,
+                              style: const TextStyle(
+                                color: Color(0xFFF44336),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+
+                      setDialogState(() {
+                        isLoading = true;
+                        errorMessage = null;
+                      });
+
+                      // Test credentials
+                      final authService = AuthService.instance;
+                      final result = await authService.signInWithEmailPassword(
+                        email: emailController.text.trim(),
+                        password: passwordController.text,
+                        rememberMe: true,
+                      );
+
+                      if (result.isAuthenticated) {
+                        // Save credentials
+                        final apiClient = ApiClientService.instance;
+                        await apiClient.setAutoLoginEnabled(true);
+                        await apiClient.storeCredentials(
+                          emailController.text.trim(),
+                          passwordController.text,
+                        );
+
+                        Navigator.of(context).pop();
+
+                        // Refresh state
+                        await _loadAutoLoginSettings();
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Auto login enabled successfully'),
+                              backgroundColor: Color(0xFF4CAF50),
+                            ),
+                          );
+                        }
+                      } else {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = result.errorMessage ?? 'Invalid credentials';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00D9FF),
+                foregroundColor: Colors.black,
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : const Text('Enable'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show dialog to change auto login credentials
+  Future<void> _showChangeCredentialsDialog() async {
+    final apiClient = ApiClientService.instance;
+    final currentEmail = await apiClient.getStoredEmail();
+
+    final emailController = TextEditingController(text: currentEmail);
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+    bool obscurePassword = true;
+    String? errorMessage;
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF16213E),
+          title: const Row(
+            children: [
+              Icon(Icons.edit, color: Color(0xFF00D9FF)),
+              SizedBox(width: 12),
+              Text(
+                'Change Credentials',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Enter new credentials for automatic login.',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration(
+                      'Password',
+                      Icons.lock_outlined,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.white54,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF44336).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Color(0xFFF44336),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage!,
+                              style: const TextStyle(
+                                color: Color(0xFFF44336),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+
+                      setDialogState(() {
+                        isLoading = true;
+                        errorMessage = null;
+                      });
+
+                      // Test new credentials
+                      final authService = AuthService.instance;
+                      final result = await authService.signInWithEmailPassword(
+                        email: emailController.text.trim(),
+                        password: passwordController.text,
+                        rememberMe: true,
+                      );
+
+                      if (result.isAuthenticated) {
+                        // Update stored credentials
+                        final apiClient = ApiClientService.instance;
+                        await apiClient.storeCredentials(
+                          emailController.text.trim(),
+                          passwordController.text,
+                        );
+
+                        Navigator.of(context).pop();
+
+                        // Refresh state
+                        await _loadAutoLoginSettings();
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Credentials updated successfully'),
+                              backgroundColor: Color(0xFF4CAF50),
+                            ),
+                          );
+                        }
+                      } else {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = result.errorMessage ?? 'Invalid credentials';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00D9FF),
+                foregroundColor: Colors.black,
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show dialog to disable auto login
+  Future<void> _showDisableAutoLoginDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF16213E),
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Color(0xFFFF9800)),
+            SizedBox(width: 12),
+            Text(
+              'Disable Auto Login',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to disable auto login? You will need to manually log in each time the app starts.',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF44336),
+            ),
+            child: const Text('Disable'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final apiClient = ApiClientService.instance;
+      await apiClient.clearCredentials();
+
+      await _loadAutoLoginSettings();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Auto login disabled'),
+            backgroundColor: Color(0xFFF44336),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Input decoration for dialogs
+  InputDecoration _dialogInputDecoration(String label, IconData icon, {Widget? suffixIcon}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+      prefixIcon: Icon(icon, color: Colors.white54),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: const Color(0xFF0F3460),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Color(0xFF00D9FF),
+          width: 2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Color(0xFFF44336),
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Color(0xFFF44336),
+          width: 2,
         ),
       ),
     );

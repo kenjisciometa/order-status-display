@@ -177,13 +177,14 @@ sudo nano /etc/systemd/system/osd.service
 ```ini
 [Unit]
 Description=Order Status Display
-After=graphical.target
-Wants=graphical.target
+After=graphical.target network-online.target
+Wants=graphical.target network-online.target
 
 [Service]
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/osd_app/build/linux/arm64/release/bundle
+ExecStartPre=/bin/sleep 10
 ExecStart=/home/pi/osd_app/build/linux/arm64/release/bundle/osd_app
 Restart=always
 RestartSec=5
