@@ -136,7 +136,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          // Row 1: Device Info & Appearance
+          // Row 1: Auto Login Settings (moved to top)
+          _buildSectionHeader('AUTO LOGIN SETTINGS'),
+          _buildAutoLoginSection(),
+
+          const SizedBox(height: 24),
+
+          // Row 2: Device Info & Appearance
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,10 +152,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildSectionHeader('DEVICE INFO'),
                     _buildInfoCard([
-                      _buildInfoRow('Display Name', settingsService.deviceName ?? '-'),
-                      _buildInfoRow('Store ID', settingsService.storeId ?? '-'),
-                      _buildInfoRow('User', authService.currentUser?.email ?? '-'),
-                    ]),
+                      _buildInfoRow('Display Name', settingsService.deviceName ?? '-', isDarkMode),
+                      _buildInfoRow('Store ID', settingsService.storeId ?? '-', isDarkMode),
+                      _buildInfoRow('User', authService.currentUser?.email ?? '-', isDarkMode),
+                    ], isDarkMode),
                   ],
                 ),
               ),
@@ -164,6 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: 'Switch between dark and light theme',
                       value: settingsService.isDarkMode,
                       onChanged: (value) => settingsService.setDarkMode(value),
+                      isDarkMode: isDarkMode,
                     ),
                   ],
                 ),
@@ -173,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Row 2: Device Control (2 components in 1 row)
+          // Row 3: Device Control (2 components in 1 row)
           _buildSectionHeader('DEVICE CONTROL'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,6 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       deviceService.disableWakeLock();
                     }
                   },
+                  isDarkMode: isDarkMode,
                 ),
               ),
               const SizedBox(width: 24),
@@ -198,6 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Screen Brightness',
                   value: deviceService.brightness,
                   onChanged: (value) => deviceService.setBrightness(value),
+                  isDarkMode: isDarkMode,
                 ),
               ),
             ],
@@ -205,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Row 3: Display Settings (full width - complex section)
+          // Row 4: Display Settings (full width - complex section)
           _buildSectionHeader('DISPLAY SETTINGS'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,7 +222,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildPrimaryDisplayTypeSelector(settingsService),
+                    _buildPrimaryDisplayTypeSelector(settingsService, isDarkMode),
                   ],
                 ),
               ),
@@ -226,14 +235,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: 'Display elapsed time on Now Cooking cards',
                       value: settingsService.showElapsedTimeNowCooking,
                       onChanged: (value) => settingsService.setShowElapsedTimeNowCooking(value),
+                      isDarkMode: isDarkMode,
                     ),
                     _buildSwitchTile(
                       title: "Show Elapsed Time (It's Ready)",
                       subtitle: "Display elapsed time on It's Ready cards",
                       value: settingsService.showElapsedTimeReady,
                       onChanged: (value) => settingsService.setShowElapsedTimeReady(value),
+                      isDarkMode: isDarkMode,
                     ),
-                    _buildHighlightDurationSelector(settingsService),
+                    _buildHighlightDurationSelector(settingsService, isDarkMode),
                   ],
                 ),
               ),
@@ -242,13 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Row 4: Auto Login Settings
-          _buildSectionHeader('AUTO LOGIN SETTINGS'),
-          _buildAutoLoginSection(),
-
-          const SizedBox(height: 24),
-
-          // Row 5: Sound Settings (full width - 2 columns)
+          // Row 6: Sound Settings (full width - 2 columns)
           _buildSectionHeader('SOUND SETTINGS'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,6 +269,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         settingsService.setPlayReadySound(value);
                         AudioService.instance.setSoundEnabled(value);
                       },
+                      isDarkMode: isDarkMode,
                     ),
                   ],
                 ),
@@ -272,7 +278,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildSoundTypeSelectorWithTest(settingsService),
+                    _buildSoundTypeSelectorWithTest(settingsService, isDarkMode),
                   ],
                 ),
               ),
@@ -336,13 +342,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildInfoCard(List<Widget> children) {
+  Widget _buildInfoCard(List<Widget> children, bool isDarkMode) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF00D9FF).withOpacity(0.2),
+          color: isDarkMode
+              ? const Color(0xFF00D9FF).withOpacity(0.2)
+              : Colors.grey.shade300,
         ),
       ),
       child: Column(
@@ -351,7 +359,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
+  Widget _buildInfoRow(String label, String value, bool isDarkMode, {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -361,7 +369,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label,
             style: TextStyle(
               fontSize: 22,
-              color: Colors.white.withOpacity(0.7),
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.7)
+                  : Colors.grey.shade600,
             ),
           ),
           Flexible(
@@ -370,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w500,
-                color: valueColor ?? Colors.white,
+                color: valueColor ?? (isDarkMode ? Colors.white : const Color(0xFF1A1A2E)),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -385,27 +395,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    required bool isDarkMode,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 26,
-            color: Colors.white,
+            color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
             fontSize: 18,
-            color: Colors.white.withOpacity(0.6),
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.6)
+                : Colors.grey.shade600,
           ),
         ),
         value: value,
@@ -422,13 +438,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required double value,
     required ValueChanged<double> onChanged,
+    required bool isDarkMode,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,9 +458,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
                 ),
               ),
               Text(
@@ -448,7 +468,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white.withOpacity(0.7),
+                  color: isDarkMode
+                      ? Colors.white.withOpacity(0.7)
+                      : Colors.grey.shade600,
                 ),
               ),
             ],
@@ -463,7 +485,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: value,
               onChanged: onChanged,
               activeColor: const Color(0xFF00D9FF),
-              inactiveColor: Colors.white24,
+              inactiveColor: isDarkMode ? Colors.white24 : Colors.grey.shade300,
             ),
           ),
         ],
@@ -472,13 +494,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Build Sound Type selector with Test Sound button inside
-  Widget _buildSoundTypeSelectorWithTest(SettingsService settingsService) {
+  Widget _buildSoundTypeSelectorWithTest(SettingsService settingsService, bool isDarkMode) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,11 +511,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Sound Type',
                 style: TextStyle(
                   fontSize: 26,
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
                 ),
               ),
               // Test Sound button
@@ -517,7 +542,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Select notification sound for ready orders',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -538,11 +565,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
-                        : Colors.white.withValues(alpha: 0.05),
+                        : (isDarkMode
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.shade100),
                     borderRadius: BorderRadius.circular(12),
                     border: isSelected
                         ? Border.all(color: const Color(0xFF00D9FF), width: 2)
-                        : Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                        : Border.all(color: isDarkMode
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.grey.shade300),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -550,7 +581,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(
                         _getSoundIcon(type),
                         size: 28,
-                        color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                        color: isSelected
+                            ? const Color(0xFF00D9FF)
+                            : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -558,7 +591,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                          color: isSelected
+                              ? const Color(0xFF00D9FF)
+                              : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
                         ),
                       ),
                     ],
@@ -584,7 +619,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Build Highlight Duration selector for newly ready orders
-  Widget _buildHighlightDurationSelector(SettingsService settingsService) {
+  Widget _buildHighlightDurationSelector(SettingsService settingsService, bool isDarkMode) {
     final currentSeconds = settingsService.highlightDurationSeconds;
     // Options: 30 seconds, 1 minute, 2 minutes, 3 minutes, 5 minutes
     // Short labels to fit in one row
@@ -600,17 +635,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Ready Order Highlight Duration',
             style: TextStyle(
               fontSize: 26,
-              color: Colors.white,
+              color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
             ),
           ),
           const SizedBox(height: 6),
@@ -618,7 +656,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Duration to highlight newly ready orders',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -636,11 +676,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
-                            : Colors.white.withValues(alpha: 0.05),
+                            : (isDarkMode
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.grey.shade100),
                         borderRadius: BorderRadius.circular(10),
                         border: isSelected
                             ? Border.all(color: const Color(0xFF00D9FF), width: 2)
-                            : Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            : Border.all(color: isDarkMode
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.grey.shade300),
                       ),
                       child: Center(
                         child: Text(
@@ -648,7 +692,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                            color: isSelected
+                                ? const Color(0xFF00D9FF)
+                                : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
                           ),
                         ),
                       ),
@@ -664,22 +710,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Build Primary Display Type selector (F-009)
-  Widget _buildPrimaryDisplayTypeSelector(SettingsService settingsService) {
+  Widget _buildPrimaryDisplayTypeSelector(SettingsService settingsService, bool isDarkMode) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Display Number Type',
             style: TextStyle(
               fontSize: 26,
-              color: Colors.white,
+              color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
             ),
           ),
           const SizedBox(height: 6),
@@ -687,7 +736,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Select the number type to display on cards',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -697,6 +748,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Call Number',
             'Customer pickup number (Recommended)',
             Icons.dialpad,
+            isDarkMode,
           ),
           _buildDisplayTypeOption(
             settingsService,
@@ -704,6 +756,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Table Number',
             'For table service',
             Icons.table_restaurant,
+            isDarkMode,
           ),
           _buildDisplayTypeOption(
             settingsService,
@@ -711,6 +764,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Order Number',
             'System order ID',
             Icons.receipt_long,
+            isDarkMode,
           ),
         ],
       ),
@@ -723,6 +777,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String title,
     String subtitle,
     IconData icon,
+    bool isDarkMode,
   ) {
     final isSelected = settingsService.primaryDisplayType == type;
     return InkWell(
@@ -744,7 +799,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF00D9FF) : Colors.white54,
+              color: isSelected
+                  ? const Color(0xFF00D9FF)
+                  : (isDarkMode ? Colors.white54 : Colors.grey.shade600),
               size: 32,
             ),
             const SizedBox(width: 16),
@@ -757,14 +814,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? const Color(0xFF00D9FF) : Colors.white,
+                      color: isSelected
+                          ? const Color(0xFF00D9FF)
+                          : (isDarkMode ? Colors.white : const Color(0xFF1A1A2E)),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.grey.shade600,
                     ),
                   ),
                 ],
