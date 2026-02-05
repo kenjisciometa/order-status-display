@@ -4,6 +4,7 @@ import '../services/settings_service.dart';
 import '../services/auth_service.dart';
 import '../services/audio_service.dart';
 import '../services/device_control_service.dart';
+import '../services/api_client_service.dart';
 import '../services/osd_websocket_service.dart';
 import 'login_screen.dart';
 
@@ -19,6 +20,30 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool _isAutoLoginEnabled = false;
+  String? _storedEmail;
+  bool _isLoadingAutoLogin = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutoLoginSettings();
+  }
+
+  Future<void> _loadAutoLoginSettings() async {
+    final apiClient = ApiClientService.instance;
+    final isEnabled = await apiClient.isAutoLoginEnabled();
+    final email = await apiClient.getStoredEmail();
+
+    if (mounted) {
+      setState(() {
+        _isAutoLoginEnabled = isEnabled;
+        _storedEmail = email;
+        _isLoadingAutoLogin = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsService = Provider.of<SettingsService>(context);
@@ -111,7 +136,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          // Row 1: Device Info & Appearance
+          // Row 1: Auto Login Settings (moved to top)
+          _buildSectionHeader('AUTO LOGIN SETTINGS'),
+          _buildAutoLoginSection(),
+
+          const SizedBox(height: 24),
+
+          // Row 2: Device Info & Appearance
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -121,10 +152,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildSectionHeader('DEVICE INFO'),
                     _buildInfoCard([
-                      _buildInfoRow('Display Name', settingsService.deviceName ?? '-'),
-                      _buildInfoRow('Store ID', settingsService.storeId ?? '-'),
-                      _buildInfoRow('User', authService.currentUser?.email ?? '-'),
-                    ]),
+                      _buildInfoRow('Display Name', settingsService.deviceName ?? '-', isDarkMode),
+                      _buildInfoRow('Store ID', settingsService.storeId ?? '-', isDarkMode),
+                      _buildInfoRow('User', authService.currentUser?.email ?? '-', isDarkMode),
+                    ], isDarkMode),
                   ],
                 ),
               ),
@@ -139,6 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: 'Switch between dark and light theme',
                       value: settingsService.isDarkMode,
                       onChanged: (value) => settingsService.setDarkMode(value),
+                      isDarkMode: isDarkMode,
                     ),
                   ],
                 ),
@@ -148,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Row 2: Device Control (2 components in 1 row)
+          // Row 3: Device Control (2 components in 1 row)
           _buildSectionHeader('DEVICE CONTROL'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,6 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       deviceService.disableWakeLock();
                     }
                   },
+                  isDarkMode: isDarkMode,
                 ),
               ),
               const SizedBox(width: 24),
@@ -173,6 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Screen Brightness',
                   value: deviceService.brightness,
                   onChanged: (value) => deviceService.setBrightness(value),
+                  isDarkMode: isDarkMode,
                 ),
               ),
             ],
@@ -180,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Row 3: Display Settings (full width - complex section)
+          // Row 4: Display Settings (full width - complex section)
           _buildSectionHeader('DISPLAY SETTINGS'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +222,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildPrimaryDisplayTypeSelector(settingsService),
+                    _buildPrimaryDisplayTypeSelector(settingsService, isDarkMode),
                   ],
                 ),
               ),
@@ -201,14 +235,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: 'Display elapsed time on Now Cooking cards',
                       value: settingsService.showElapsedTimeNowCooking,
                       onChanged: (value) => settingsService.setShowElapsedTimeNowCooking(value),
+                      isDarkMode: isDarkMode,
                     ),
                     _buildSwitchTile(
                       title: "Show Elapsed Time (It's Ready)",
                       subtitle: "Display elapsed time on It's Ready cards",
                       value: settingsService.showElapsedTimeReady,
                       onChanged: (value) => settingsService.setShowElapsedTimeReady(value),
+                      isDarkMode: isDarkMode,
                     ),
-                    _buildHighlightDurationSelector(settingsService),
+                    _buildHighlightDurationSelector(settingsService, isDarkMode),
                   ],
                 ),
               ),
@@ -217,7 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Row 4: Sound Settings (full width - 2 columns)
+          // Row 6: Sound Settings (full width - 2 columns)
           _buildSectionHeader('SOUND SETTINGS'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,6 +269,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         settingsService.setPlayReadySound(value);
                         AudioService.instance.setSoundEnabled(value);
                       },
+                      isDarkMode: isDarkMode,
                     ),
                   ],
                 ),
@@ -241,7 +278,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildSoundTypeSelectorWithTest(settingsService),
+                    _buildSoundTypeSelectorWithTest(settingsService, isDarkMode),
                   ],
                 ),
               ),
@@ -305,13 +342,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildInfoCard(List<Widget> children) {
+  Widget _buildInfoCard(List<Widget> children, bool isDarkMode) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF00D9FF).withOpacity(0.2),
+          color: isDarkMode
+              ? const Color(0xFF00D9FF).withOpacity(0.2)
+              : Colors.grey.shade300,
         ),
       ),
       child: Column(
@@ -320,7 +359,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
+  Widget _buildInfoRow(String label, String value, bool isDarkMode, {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -330,7 +369,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label,
             style: TextStyle(
               fontSize: 22,
-              color: Colors.white.withOpacity(0.7),
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.7)
+                  : Colors.grey.shade600,
             ),
           ),
           Flexible(
@@ -339,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w500,
-                color: valueColor ?? Colors.white,
+                color: valueColor ?? (isDarkMode ? Colors.white : const Color(0xFF1A1A2E)),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -354,27 +395,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    required bool isDarkMode,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 26,
-            color: Colors.white,
+            color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
             fontSize: 18,
-            color: Colors.white.withOpacity(0.6),
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.6)
+                : Colors.grey.shade600,
           ),
         ),
         value: value,
@@ -391,13 +438,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required double value,
     required ValueChanged<double> onChanged,
+    required bool isDarkMode,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,9 +458,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
                 ),
               ),
               Text(
@@ -417,7 +468,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white.withOpacity(0.7),
+                  color: isDarkMode
+                      ? Colors.white.withOpacity(0.7)
+                      : Colors.grey.shade600,
                 ),
               ),
             ],
@@ -432,7 +485,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: value,
               onChanged: onChanged,
               activeColor: const Color(0xFF00D9FF),
-              inactiveColor: Colors.white24,
+              inactiveColor: isDarkMode ? Colors.white24 : Colors.grey.shade300,
             ),
           ),
         ],
@@ -441,13 +494,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Build Sound Type selector with Test Sound button inside
-  Widget _buildSoundTypeSelectorWithTest(SettingsService settingsService) {
+  Widget _buildSoundTypeSelectorWithTest(SettingsService settingsService, bool isDarkMode) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,11 +511,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Sound Type',
                 style: TextStyle(
                   fontSize: 26,
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
                 ),
               ),
               // Test Sound button
@@ -486,7 +542,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Select notification sound for ready orders',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -507,11 +565,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
-                        : Colors.white.withValues(alpha: 0.05),
+                        : (isDarkMode
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.shade100),
                     borderRadius: BorderRadius.circular(12),
                     border: isSelected
                         ? Border.all(color: const Color(0xFF00D9FF), width: 2)
-                        : Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                        : Border.all(color: isDarkMode
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.grey.shade300),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -519,7 +581,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(
                         _getSoundIcon(type),
                         size: 28,
-                        color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                        color: isSelected
+                            ? const Color(0xFF00D9FF)
+                            : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -527,7 +591,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                          color: isSelected
+                              ? const Color(0xFF00D9FF)
+                              : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
                         ),
                       ),
                     ],
@@ -553,7 +619,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Build Highlight Duration selector for newly ready orders
-  Widget _buildHighlightDurationSelector(SettingsService settingsService) {
+  Widget _buildHighlightDurationSelector(SettingsService settingsService, bool isDarkMode) {
     final currentSeconds = settingsService.highlightDurationSeconds;
     // Options: 30 seconds, 1 minute, 2 minutes, 3 minutes, 5 minutes
     // Short labels to fit in one row
@@ -569,17 +635,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Ready Order Highlight Duration',
             style: TextStyle(
               fontSize: 26,
-              color: Colors.white,
+              color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
             ),
           ),
           const SizedBox(height: 6),
@@ -587,7 +656,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Duration to highlight newly ready orders',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -605,11 +676,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
-                            : Colors.white.withValues(alpha: 0.05),
+                            : (isDarkMode
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.grey.shade100),
                         borderRadius: BorderRadius.circular(10),
                         border: isSelected
                             ? Border.all(color: const Color(0xFF00D9FF), width: 2)
-                            : Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            : Border.all(color: isDarkMode
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.grey.shade300),
                       ),
                       child: Center(
                         child: Text(
@@ -617,7 +692,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected ? const Color(0xFF00D9FF) : Colors.white70,
+                            color: isSelected
+                                ? const Color(0xFF00D9FF)
+                                : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
                           ),
                         ),
                       ),
@@ -633,22 +710,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Build Primary Display Type selector (F-009)
-  Widget _buildPrimaryDisplayTypeSelector(SettingsService settingsService) {
+  Widget _buildPrimaryDisplayTypeSelector(SettingsService settingsService, bool isDarkMode) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDarkMode
+            ? null
+            : Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Display Number Type',
             style: TextStyle(
               fontSize: 26,
-              color: Colors.white,
+              color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
             ),
           ),
           const SizedBox(height: 6),
@@ -656,7 +736,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Select the number type to display on cards',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -666,6 +748,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Call Number',
             'Customer pickup number (Recommended)',
             Icons.dialpad,
+            isDarkMode,
           ),
           _buildDisplayTypeOption(
             settingsService,
@@ -673,6 +756,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Table Number',
             'For table service',
             Icons.table_restaurant,
+            isDarkMode,
           ),
           _buildDisplayTypeOption(
             settingsService,
@@ -680,6 +764,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Order Number',
             'System order ID',
             Icons.receipt_long,
+            isDarkMode,
           ),
         ],
       ),
@@ -692,6 +777,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String title,
     String subtitle,
     IconData icon,
+    bool isDarkMode,
   ) {
     final isSelected = settingsService.primaryDisplayType == type;
     return InkWell(
@@ -713,7 +799,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF00D9FF) : Colors.white54,
+              color: isSelected
+                  ? const Color(0xFF00D9FF)
+                  : (isDarkMode ? Colors.white54 : Colors.grey.shade600),
               size: 32,
             ),
             const SizedBox(width: 16),
@@ -726,14 +814,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? const Color(0xFF00D9FF) : Colors.white,
+                      color: isSelected
+                          ? const Color(0xFF00D9FF)
+                          : (isDarkMode ? Colors.white : const Color(0xFF1A1A2E)),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.grey.shade600,
                     ),
                   ),
                 ],
@@ -746,6 +838,641 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 size: 28,
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Build Auto Login settings section
+  Widget _buildAutoLoginSection() {
+    final settingsService = Provider.of<SettingsService>(context, listen: false);
+    final isDarkMode = settingsService.isDarkMode;
+
+    if (_isLoadingAutoLogin) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF16213E),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF00D9FF),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode
+              ? const Color(0xFF00D9FF).withOpacity(0.2)
+              : Colors.grey.shade300,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status row
+          Row(
+            children: [
+              Icon(
+                _isAutoLoginEnabled ? Icons.check_circle : Icons.cancel,
+                color: _isAutoLoginEnabled
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFF44336),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isAutoLoginEnabled ? 'Auto Login Enabled' : 'Auto Login Disabled',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
+                      ),
+                    ),
+                    if (_storedEmail != null && _isAutoLoginEnabled)
+                      Text(
+                        'Account: $_storedEmail',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.6)
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Description
+          Text(
+            _isAutoLoginEnabled
+                ? 'The app will automatically log in with the saved credentials when started.'
+                : 'Enable auto login to automatically sign in when the app starts.',
+            style: TextStyle(
+              fontSize: 16,
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.7)
+                  : Colors.grey.shade700,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Action buttons
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              if (_isAutoLoginEnabled) ...[
+                // Change credentials button
+                ElevatedButton.icon(
+                  onPressed: () => _showChangeCredentialsDialog(),
+                  icon: const Icon(Icons.edit, size: 20),
+                  label: const Text(
+                    'Change Credentials',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00D9FF),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                // Disable auto login button
+                OutlinedButton.icon(
+                  onPressed: () => _showDisableAutoLoginDialog(),
+                  icon: const Icon(Icons.power_settings_new, size: 20),
+                  label: const Text(
+                    'Disable Auto Login',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFF44336),
+                    side: const BorderSide(color: Color(0xFFF44336)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                // Enable auto login button
+                ElevatedButton.icon(
+                  onPressed: () => _showEnableAutoLoginDialog(),
+                  icon: const Icon(Icons.login, size: 20),
+                  label: const Text(
+                    'Enable Auto Login',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00D9FF),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show dialog to enable auto login
+  Future<void> _showEnableAutoLoginDialog() async {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+    bool obscurePassword = true;
+    String? errorMessage;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF16213E),
+          title: const Row(
+            children: [
+              Icon(Icons.login, color: Color(0xFF00D9FF)),
+              SizedBox(width: 12),
+              Text(
+                'Enable Auto Login',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Enter credentials to save for automatic login.',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration(
+                      'Password',
+                      Icons.lock_outlined,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.white54,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF44336).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Color(0xFFF44336),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage!,
+                              style: const TextStyle(
+                                color: Color(0xFFF44336),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+
+                      setDialogState(() {
+                        isLoading = true;
+                        errorMessage = null;
+                      });
+
+                      // Test credentials
+                      final authService = AuthService.instance;
+                      final result = await authService.signInWithEmailPassword(
+                        email: emailController.text.trim(),
+                        password: passwordController.text,
+                        rememberMe: true,
+                      );
+
+                      if (result.isAuthenticated) {
+                        // Save credentials
+                        final apiClient = ApiClientService.instance;
+                        await apiClient.setAutoLoginEnabled(true);
+                        await apiClient.storeCredentials(
+                          emailController.text.trim(),
+                          passwordController.text,
+                        );
+
+                        Navigator.of(context).pop();
+
+                        // Refresh state
+                        await _loadAutoLoginSettings();
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Auto login enabled successfully'),
+                              backgroundColor: Color(0xFF4CAF50),
+                            ),
+                          );
+                        }
+                      } else {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = result.errorMessage ?? 'Invalid credentials';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00D9FF),
+                foregroundColor: Colors.black,
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : const Text('Enable'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show dialog to change auto login credentials
+  Future<void> _showChangeCredentialsDialog() async {
+    final apiClient = ApiClientService.instance;
+    final currentEmail = await apiClient.getStoredEmail();
+
+    final emailController = TextEditingController(text: currentEmail);
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+    bool obscurePassword = true;
+    String? errorMessage;
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF16213E),
+          title: const Row(
+            children: [
+              Icon(Icons.edit, color: Color(0xFF00D9FF)),
+              SizedBox(width: 12),
+              Text(
+                'Change Credentials',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Enter new credentials for automatic login.',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _dialogInputDecoration(
+                      'Password',
+                      Icons.lock_outlined,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.white54,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF44336).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Color(0xFFF44336),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage!,
+                              style: const TextStyle(
+                                color: Color(0xFFF44336),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+
+                      setDialogState(() {
+                        isLoading = true;
+                        errorMessage = null;
+                      });
+
+                      // Test new credentials
+                      final authService = AuthService.instance;
+                      final result = await authService.signInWithEmailPassword(
+                        email: emailController.text.trim(),
+                        password: passwordController.text,
+                        rememberMe: true,
+                      );
+
+                      if (result.isAuthenticated) {
+                        // Update stored credentials
+                        final apiClient = ApiClientService.instance;
+                        await apiClient.storeCredentials(
+                          emailController.text.trim(),
+                          passwordController.text,
+                        );
+
+                        Navigator.of(context).pop();
+
+                        // Refresh state
+                        await _loadAutoLoginSettings();
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Credentials updated successfully'),
+                              backgroundColor: Color(0xFF4CAF50),
+                            ),
+                          );
+                        }
+                      } else {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = result.errorMessage ?? 'Invalid credentials';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00D9FF),
+                foregroundColor: Colors.black,
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show dialog to disable auto login
+  Future<void> _showDisableAutoLoginDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF16213E),
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Color(0xFFFF9800)),
+            SizedBox(width: 12),
+            Text(
+              'Disable Auto Login',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to disable auto login? You will need to manually log in each time the app starts.',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF44336),
+            ),
+            child: const Text('Disable'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final apiClient = ApiClientService.instance;
+      await apiClient.clearCredentials();
+
+      await _loadAutoLoginSettings();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Auto login disabled'),
+            backgroundColor: Color(0xFFF44336),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Input decoration for dialogs
+  InputDecoration _dialogInputDecoration(String label, IconData icon, {Widget? suffixIcon}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+      prefixIcon: Icon(icon, color: Colors.white54),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: const Color(0xFF0F3460),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Color(0xFF00D9FF),
+          width: 2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Color(0xFFF44336),
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Color(0xFFF44336),
+          width: 2,
         ),
       ),
     );
