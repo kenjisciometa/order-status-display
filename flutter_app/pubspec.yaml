@@ -44,6 +44,12 @@ dependencies:
   flutter_dotenv: ^5.1.0
   device_info_plus: ^9.1.0
 
+  # Google Sign-In (for Android)
+  google_sign_in: ^6.2.1
+
+  # SVG Support (for Google logo)
+  flutter_svg: ^2.0.10+1
+
   # Network monitoring (案2: WebSocket接続安定化)
   connectivity_plus: ^6.0.3
 
@@ -63,6 +69,7 @@ flutter:
 
   assets:
     - assets/sounds/
+    - assets/icons/
     - .env
 
 flutter_launcher_icons:
