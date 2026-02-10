@@ -38,6 +38,7 @@ class ApiEndpoints {
   // Authentication endpoints (relative paths - baseUrl is set in Dio)
   static const String signUp = '/api/auth/signup';
   static const String signIn = '/api/auth/login';
+  static const String signInWithGoogleNative = '/api/auth/google-native';
   static const String signOut = '/api/auth/logout';
   static const String refreshToken = '/api/auth/refresh';
   static const String resetPassword = '/api/auth/reset-password';

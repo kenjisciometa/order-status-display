@@ -1,5 +1,7 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 import 'display_selection_screen.dart';
 import 'order_status_screen.dart';
@@ -109,6 +111,51 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       setState(() {
         _errorMessage = result.errorMessage ?? 'Login failed';
+      });
+    }
+  }
+
+  /// Handle Google Sign-In (Android only)
+  Future<void> _handleGoogleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final authService = AuthService.instance;
+    final result = await authService.signInWithGoogle();
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result.isAuthenticated) {
+      // Fetch displays
+      final displays = await authService.fetchOsdDisplays();
+
+      if (!mounted) return;
+
+      if (displays.isEmpty) {
+        setState(() {
+          _errorMessage = 'No displays available for this account.';
+        });
+      } else if (displays.length == 1) {
+        // Auto-select single display
+        await authService.selectDisplay(displays.first);
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
+        );
+      } else {
+        // Show display selection
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
+        );
+      }
+    } else {
+      setState(() {
+        _errorMessage = result.errorMessage ?? 'Google login failed';
       });
     }
   }
@@ -328,6 +375,71 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                       ),
+
+                      // Google Sign-In button (Android only)
+                      if (Platform.isAndroid) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                color: Colors.white24,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'OR',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                color: Colors.white24,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton(
+                            onPressed: _isLoading ? null : _handleGoogleLogin,
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF3C4043),
+                              side: const BorderSide(color: Color(0xFFDADCE0)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/icons/google_logo.svg',
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Sign in with Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
