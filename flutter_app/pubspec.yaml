@@ -21,7 +21,14 @@ dependencies:
 
   # Local Storage (unified - works on all platforms including Linux/Raspberry Pi)
   shared_preferences: ^2.2.2
-  # Note: flutter_secure_storage removed to avoid keyring issues on Linux/Raspberry Pi
+
+  # Secure Storage (platform-specific)
+  # - iOS/Android/macOS/Windows: FlutterSecureStorage (Keychain/EncryptedPrefs)
+  # - Linux/Raspberry Pi: Hive encrypted box (no keyring dependency)
+  flutter_secure_storage: ^9.2.2
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.2
+  crypto: ^3.0.3
 
   # Utilities - UUID
   uuid: ^4.2.1
