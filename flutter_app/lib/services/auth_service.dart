@@ -128,7 +128,7 @@ class AuthService extends ChangeNotifier {
         data: {
           'email': email,
           'password': password,
-          'deviceId': _apiClient.deviceId ?? 'osd_device',
+          'deviceId': _apiClient.deviceId ?? 'osd',
         },
       );
 
@@ -362,7 +362,7 @@ class AuthService extends ChangeNotifier {
           'id_token': tokens.idToken,
           'access_token': tokens.accessToken,
           if (tokens.email != null) 'email': tokens.email,
-          'deviceId': _apiClient.deviceId ?? 'osd_device',
+          'deviceId': _apiClient.deviceId ?? 'osd',
         },
       );
 

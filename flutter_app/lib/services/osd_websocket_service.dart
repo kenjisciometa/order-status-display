@@ -269,7 +269,7 @@ class OsdWebSocketService extends ChangeNotifier {
       _currentStoreId = storeId;
       _currentOrganizationId = organizationId;
       _currentDeviceId =
-          deviceId ?? 'osd_device_${DateTime.now().millisecondsSinceEpoch}';
+          deviceId ?? 'osd_${DateTime.now().millisecondsSinceEpoch}';
       _currentDisplayId = displayId;
 
       // Get JWT token from server
@@ -313,7 +313,7 @@ class OsdWebSocketService extends ChangeNotifier {
               .setAuth({'token': jwtToken})
               .setExtraHeaders({
                 'x-device-id': deviceMac,
-                'x-device-type': 'sds_device', // Use sds_device type (OSD is similar to SDS)
+                'x-device-type': 'osd',
               })
               .build());
 
@@ -623,7 +623,7 @@ class OsdWebSocketService extends ChangeNotifier {
         'organizationId': _currentOrganizationId,
         'displayId': _currentDisplayId,
         'token': jwtToken,
-        'type': 'sds_device', // Use sds_device type (OSD is similar to SDS - read-only display)
+        'type': 'osd',
         'stableDeviceId': deviceMac,
       };
 
