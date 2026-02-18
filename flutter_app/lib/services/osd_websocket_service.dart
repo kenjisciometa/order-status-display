@@ -37,11 +37,15 @@ class OsdWebSocketService extends ChangeNotifier {
   Timer? _reconnectTimer;
   Timer? _authTimeoutTimer;
   Timer? _connectionTimeoutTimer;
+  Timer? _tokenRefreshTimer;  // Token auto-refresh timer
   DateTime? _connectionAttemptStarted;
   int _reconnectAttempts = 0;
   static const int maxReconnectAttempts = 30;
   bool _isReconnecting = false;
   bool _isAuthenticating = false;
+  int _reAuthFailureCount = 0;  // Re-authentication failure counter
+  static const int _maxReAuthFailures = 3;  // Max re-auth failures before reconnect
+  static const Duration _tokenRefreshInterval = Duration(hours: 6);  // Token refresh interval
 
   // 案2: ネットワーク状態監視
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
@@ -369,8 +373,10 @@ class OsdWebSocketService extends ChangeNotifier {
       _lastConnectedAt = DateTime.now();
       _reconnectAttempts = 0;
       _isReconnecting = false;
+      _reAuthFailureCount = 0; // Reset re-auth failure count on successful authentication
 
       _startHeartbeat();
+      _startTokenRefreshTimer(); // Start token refresh timer
 
       // Recovery: fetch latest data after reconnection
       if (_wasDisconnected && !_isRefreshing) {
@@ -393,6 +399,38 @@ class OsdWebSocketService extends ChangeNotifier {
       disconnect();
       _scheduleReconnect(_currentStoreId!,
           deviceId: _currentDeviceId, organizationId: _currentOrganizationId);
+    });
+
+    // Re-authentication successful (token refresh)
+    _socket!.on('re-authenticated', (data) {
+      _reAuthFailureCount = 0; // Reset re-auth failure counter
+      debugPrint('🔄 OSD: Token re-authenticated successfully');
+      if (WebSocketConfig.enableDebugLogging) {
+        debugPrint('   expiresAt: ${data['expiresAt']}');
+      }
+    });
+
+    // Re-authentication failed
+    _socket!.on('re-authentication_failed', (data) {
+      _reAuthFailureCount++;
+      debugPrint('🔴 OSD: Re-authentication failed (attempt $_reAuthFailureCount/$_maxReAuthFailures)');
+      debugPrint('   Reason: ${data['reason'] ?? 'Unknown'}');
+
+      if (_reAuthFailureCount >= _maxReAuthFailures) {
+        debugPrint('❌ OSD: Maximum re-authentication failures reached. Forcing reconnection.');
+        // Clear token and force reconnect with fresh token
+        WebSocketTokenService.instance.clearToken();
+        disconnect();
+        if (_currentStoreId != null) {
+          _scheduleReconnect(
+            _currentStoreId!,
+            deviceId: _currentDeviceId,
+            displayId: _currentDisplayId,
+            organizationId: _currentOrganizationId,
+            forceTokenRefresh: true,
+          );
+        }
+      }
     });
 
     // Disconnected
@@ -672,6 +710,96 @@ class OsdWebSocketService extends ChangeNotifier {
     _heartbeatTimer = null;
   }
 
+  /// Start token refresh timer (6-hour interval)
+  void _startTokenRefreshTimer() {
+    _stopTokenRefreshTimer();
+    debugPrint('🔄 OSD: Starting token refresh timer (${_tokenRefreshInterval.inHours}h interval)');
+
+    _tokenRefreshTimer = Timer.periodic(_tokenRefreshInterval, (_) {
+      _refreshTokenAndReauthenticate();
+    });
+  }
+
+  /// Stop token refresh timer
+  void _stopTokenRefreshTimer() {
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = null;
+  }
+
+  /// Refresh token and re-authenticate without disconnecting
+  Future<void> _refreshTokenAndReauthenticate() async {
+    if (!_isConnected || _socket == null) {
+      debugPrint('⚠️ OSD: Cannot refresh token - not connected');
+      return;
+    }
+
+    if (_currentStoreId == null || _currentDeviceId == null || _currentOrganizationId == null) {
+      debugPrint('⚠️ OSD: Cannot refresh token - missing connection parameters');
+      return;
+    }
+
+    debugPrint('🔄 OSD: Refreshing token and re-authenticating...');
+
+    try {
+      // Get fresh token from server
+      final wsTokenService = WebSocketTokenService.instance;
+      final newToken = await wsTokenService.getToken(
+        storeId: _currentStoreId!,
+        deviceId: _currentDeviceId!,
+        organizationId: _currentOrganizationId!,
+        displayId: _currentDisplayId,
+        forceRefresh: true,
+      );
+
+      if (newToken == null) {
+        debugPrint('❌ OSD: Failed to obtain new token for re-authentication');
+        _reAuthFailureCount++;
+        if (_reAuthFailureCount >= _maxReAuthFailures) {
+          debugPrint('❌ OSD: Maximum re-authentication failures reached. Forcing reconnection.');
+          WebSocketTokenService.instance.clearToken();
+          disconnect();
+          _scheduleReconnect(
+            _currentStoreId!,
+            deviceId: _currentDeviceId,
+            displayId: _currentDisplayId,
+            organizationId: _currentOrganizationId,
+            forceTokenRefresh: true,
+          );
+        }
+        return;
+      }
+
+      // Send re-authenticate event
+      final reAuthData = {
+        'token': newToken,
+        'deviceId': _currentDeviceId,
+        'storeId': _currentStoreId,
+        'organizationId': _currentOrganizationId,
+        'type': 'osd',
+      };
+
+      _socket!.emit('re-authenticate', reAuthData);
+      debugPrint('🔄 OSD: Re-authentication request sent');
+
+    } catch (e) {
+      debugPrint('❌ OSD: Token refresh error: $e');
+      _reAuthFailureCount++;
+      if (_reAuthFailureCount >= _maxReAuthFailures) {
+        debugPrint('❌ OSD: Maximum re-authentication failures reached. Forcing reconnection.');
+        disconnect();
+        if (_currentStoreId != null) {
+          _scheduleReconnect(
+            _currentStoreId!,
+            deviceId: _currentDeviceId,
+            displayId: _currentDisplayId,
+            organizationId: _currentOrganizationId,
+            forceTokenRefresh: true,
+          );
+        }
+      }
+    }
+  }
+
   /// Send message acknowledgment for Reliable Messaging
   ///
   /// The WebSocket server uses Reliable Messaging which requires ACKs
@@ -795,6 +923,7 @@ class OsdWebSocketService extends ChangeNotifier {
     debugPrint('OSD: Disconnecting from WebSocket server');
 
     _stopHeartbeat();
+    _stopTokenRefreshTimer();
     _reconnectTimer?.cancel();
     _authTimeoutTimer?.cancel();
     _connectionTimeoutTimer?.cancel();
