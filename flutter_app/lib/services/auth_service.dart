@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../models/auth_state.dart';
@@ -6,6 +7,7 @@ import '../models/osd_display.dart';
 import '../config/api_endpoints.dart';
 import 'api_client_service.dart';
 import 'settings_service.dart';
+import 'google_auth_service.dart';
 
 /// Authentication service for OSD (Order Status Display)
 /// Handles login, logout, session management, and display fetching
@@ -126,7 +128,7 @@ class AuthService extends ChangeNotifier {
         data: {
           'email': email,
           'password': password,
-          'deviceId': _apiClient.deviceId ?? 'osd_device',
+          'deviceId': _apiClient.deviceId ?? 'osd',
         },
       );
 
@@ -318,5 +320,92 @@ class AuthService extends ChangeNotifier {
   Future<void> disableAutoLogin() async {
     await _apiClient.clearCredentials();
     debugPrint('🔐 [OSD AUTH] Auto-login disabled');
+  }
+
+  /// Check if Google Sign-In is supported on this platform
+  bool get isGoogleSignInSupported => Platform.isAndroid;
+
+  /// Sign in with Google (Android only)
+  Future<AuthState> signInWithGoogle() async {
+    try {
+      if (!Platform.isAndroid) {
+        debugPrint('⚠️ [OSD AUTH] Google Sign-In only supported on Android');
+        final errorState = const AuthState.unauthenticated(
+          'Google Sign-In is only available on Android devices.',
+        );
+        _updateState(errorState);
+        return errorState;
+      }
+
+      _updateState(const AuthState.loading());
+      debugPrint('🔐 [OSD AUTH] Starting Google sign-in flow');
+
+      // 1) Execute native Google sign-in to obtain tokens
+      final tokens = await GoogleAuthService.signInAndGetTokens();
+
+      // User cancelled the Google sign-in dialog
+      if (tokens == null) {
+        debugPrint('⚠️ [OSD AUTH] Google sign-in cancelled by user');
+        final cancelledState = const AuthState.unauthenticated(
+          'Google sign-in was cancelled.',
+        );
+        _updateState(cancelledState);
+        return cancelledState;
+      }
+
+      debugPrint('🔐 [OSD AUTH] Google tokens acquired - sending to backend');
+
+      // 2) Send tokens to backend for Supabase session + profile creation
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        ApiEndpoints.signInWithGoogleNative,
+        data: {
+          'id_token': tokens.idToken,
+          'access_token': tokens.accessToken,
+          if (tokens.email != null) 'email': tokens.email,
+          'deviceId': _apiClient.deviceId ?? 'osd',
+        },
+      );
+
+      debugPrint('🔐 [OSD AUTH] Google login response success: ${response.success}');
+
+      if (response.success && response.data != null) {
+        final data = response.data!;
+
+        final sessionData = data['session'] as Map<String, dynamic>?;
+        final userProfileData = data['user'] as Map<String, dynamic>?;
+
+        if (sessionData != null && userProfileData != null) {
+          final accessToken = sessionData['access_token'] as String?;
+          final refreshToken = sessionData['refresh_token'] as String?;
+
+          if (accessToken != null) {
+            await _apiClient.setAuthToken(accessToken, refreshToken);
+
+            // Create user object
+            _currentUser = User.fromJson(userProfileData);
+            final authState = AuthState.authenticated(_currentUser!);
+            _updateState(authState);
+
+            debugPrint(
+                '✅ [OSD AUTH] Google login successful for user: ${_currentUser!.email}');
+            return authState;
+          }
+        }
+      }
+
+      final serverError =
+          response.data?['error'] ?? response.message ?? 'Google authentication failed';
+      debugPrint('❌ [OSD AUTH] Google login failed: $serverError');
+
+      final errorState = AuthState.unauthenticated(serverError);
+      _updateState(errorState);
+      return errorState;
+    } catch (e) {
+      debugPrint('❌ [OSD AUTH] Google login exception: $e');
+      final errorState =
+          AuthState.unauthenticated('Google sign-in failed: $e');
+      _updateState(errorState);
+      return errorState;
+    }
   }
 }

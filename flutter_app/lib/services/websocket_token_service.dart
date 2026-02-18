@@ -1,13 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_client_service.dart';
+import 'secure_storage_service.dart';
 
 /// WebSocket Token Service for OSD
 ///
 /// This service manages WebSocket authentication tokens obtained from the backend.
 /// Tokens are retrieved via the restaurant-pos API and stored securely on device.
 /// The JWT_SECRET is never exposed to the client - all token generation happens server-side.
+///
+/// Storage is platform-specific for security:
+/// - iOS/Android/macOS/Windows: Keychain/EncryptedSharedPreferences
+/// - Linux/Raspberry Pi: Hive encrypted box (no keyring dependency)
 class WebSocketTokenService {
   static const String _tokenKey = 'osd_websocket_token';
   static const String _tokenExpiryKey = 'osd_websocket_token_expiry';
@@ -15,7 +19,7 @@ class WebSocketTokenService {
   // Refresh token when it has less than 7 days until expiry
   static const int _refreshThresholdDays = 7;
 
-  final FlutterSecureStorage _secureStorage;
+  final SecureStorageService _secureStorage;
   final ApiClientService _apiClient;
 
   // Cached token data
@@ -30,21 +34,17 @@ class WebSocketTokenService {
   }
 
   WebSocketTokenService._internal()
-      : _secureStorage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(
-            encryptedSharedPreferences: true,
-          ),
-          iOptions: IOSOptions(
-            accessibility: KeychainAccessibility.first_unlock_this_device,
-          ),
-        ),
+      : _secureStorage = SecureStorageService.instance,
         _apiClient = ApiClientService.instance;
 
   /// Initialize and load cached token
   Future<void> initialize() async {
+    // Initialize secure storage first
+    await _secureStorage.initialize();
     await _loadCachedToken();
     if (kDebugMode) {
-      debugPrint('🔐 [OSD WS Token] Service initialized');
+      debugPrint(
+          '🔐 [OSD WS Token] Service initialized (storage: ${_secureStorage.storageType})');
     }
   }
 
@@ -168,7 +168,7 @@ class WebSocketTokenService {
           'storeId': storeId,
           'deviceId': deviceId,
           'organizationId': organizationId,
-          'deviceType': 'sds_device', // Use sds_device type (OSD is similar to SDS - read-only display)
+          'deviceType': 'osd',
           if (displayId != null) 'displayId': displayId,
         },
       );
@@ -260,4 +260,7 @@ class WebSocketTokenService {
   bool hasValidToken() {
     return _cachedToken != null && !_isExpired();
   }
+
+  /// Get the storage type being used (for debugging)
+  String get storageType => _secureStorage.storageType;
 }
