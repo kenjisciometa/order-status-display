@@ -3,6 +3,7 @@ import '../models/osd_order.dart';
 import '../config/api_endpoints.dart';
 import 'api_client_service.dart';
 import 'auth_service.dart';
+import 'settings_service.dart';
 
 /// OSD Order Service
 ///
@@ -24,6 +25,7 @@ class OsdOrderService {
 
   final ApiClientService _apiClient = ApiClientService.instance;
   final AuthService _authService = AuthService.instance;
+  final SettingsService _settingsService = SettingsService.instance;
 
   /// Fetch all active orders for a store
   ///
@@ -47,18 +49,29 @@ class OsdOrderService {
         return [];
       }
 
+      // Get display_id from settings for category filtering
+      final displayId = _settingsService.displayId;
+
       debugPrint('📥 [OSD ORDER SERVICE] Fetching active orders for store: $storeId');
       debugPrint('   Organization ID: $organizationId');
+      debugPrint('   Display ID: $displayId');
+
+      final queryParams = <String, String>{
+        'organization_id': organizationId,
+        'store_id': storeId,
+        // Request orders that should be displayed on OSD
+        // API uses 'status' parameter (not 'kitchen_status') to filter by display_status.status
+        'status': ['pending', 'ready'].join(','),
+      };
+
+      // Add display_id for category filtering if configured
+      if (displayId != null && displayId.isNotEmpty) {
+        queryParams['display_id'] = displayId;
+      }
 
       final response = await _apiClient.get<Map<String, dynamic>>(
         ApiEndpoints.osdOrders,
-        queryParameters: {
-          'organization_id': organizationId,
-          'store_id': storeId,
-          // Request orders that should be displayed on OSD
-          // API uses 'status' parameter (not 'kitchen_status') to filter by display_status.status
-          'status': ['pending', 'ready'].join(','),
-        },
+        queryParameters: queryParams,
       );
 
       if (response.success && response.data != null) {
@@ -109,16 +122,27 @@ class OsdOrderService {
         return [];
       }
 
+      // Get display_id from settings for category filtering
+      final displayId = _settingsService.displayId;
+
       debugPrint('📥 [OSD ORDER SERVICE] Fetching "Now Cooking" orders');
+      debugPrint('   Display ID: $displayId');
+
+      final queryParams = <String, String>{
+        'organization_id': organizationId,
+        'store_id': storeId,
+        // API uses 'status' parameter to filter by display_status.status
+        'status': 'pending',
+      };
+
+      // Add display_id for category filtering if configured
+      if (displayId != null && displayId.isNotEmpty) {
+        queryParams['display_id'] = displayId;
+      }
 
       final response = await _apiClient.get<Map<String, dynamic>>(
         ApiEndpoints.osdOrders,
-        queryParameters: {
-          'organization_id': organizationId,
-          'store_id': storeId,
-          // API uses 'status' parameter to filter by display_status.status
-          'status': 'pending',
-        },
+        queryParameters: queryParams,
       );
 
       if (response.success && response.data != null) {
@@ -161,16 +185,27 @@ class OsdOrderService {
         return [];
       }
 
+      // Get display_id from settings for category filtering
+      final displayId = _settingsService.displayId;
+
       debugPrint('📥 [OSD ORDER SERVICE] Fetching "Ready" orders');
+      debugPrint('   Display ID: $displayId');
+
+      final queryParams = <String, String>{
+        'organization_id': organizationId,
+        'store_id': storeId,
+        // API uses 'status' parameter to filter by display_status.status
+        'status': 'ready',
+      };
+
+      // Add display_id for category filtering if configured
+      if (displayId != null && displayId.isNotEmpty) {
+        queryParams['display_id'] = displayId;
+      }
 
       final response = await _apiClient.get<Map<String, dynamic>>(
         ApiEndpoints.osdOrders,
-        queryParameters: {
-          'organization_id': organizationId,
-          'store_id': storeId,
-          // API uses 'status' parameter to filter by display_status.status
-          'status': 'ready',
-        },
+        queryParameters: queryParams,
       );
 
       if (response.success && response.data != null) {

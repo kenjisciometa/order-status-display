@@ -1,13 +1,17 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../models/auth_state.dart';
-import '../models/osd_display.dart';
+import '../models/display_preset.dart';
 import '../config/api_endpoints.dart';
 import 'api_client_service.dart';
 import 'settings_service.dart';
 import 'google_auth_service.dart';
+
+/// Key for storing the last selected display ID in SharedPreferences
+const String _lastSelectedDisplayIdKey = 'last_selected_display_id';
 
 /// Authentication service for OSD (Order Status Display)
 /// Handles login, logout, session management, and display fetching
@@ -24,8 +28,8 @@ class AuthService extends ChangeNotifier {
 
   AuthState _currentState = const AuthState.unknown();
   User? _currentUser;
-  List<OsdDisplay> _availableDisplays = [];
-  OsdDisplay? _selectedDisplay;
+  List<DisplayPreset> _availableDisplays = [];
+  DisplayPreset? _selectedDisplay;
 
   /// Current authentication state
   AuthState get currentState => _currentState;
@@ -34,10 +38,10 @@ class AuthService extends ChangeNotifier {
   User? get currentUser => _currentUser;
 
   /// Available OSD displays for the user
-  List<OsdDisplay> get availableDisplays => _availableDisplays;
+  List<DisplayPreset> get availableDisplays => _availableDisplays;
 
   /// Selected OSD display
-  OsdDisplay? get selectedDisplay => _selectedDisplay;
+  DisplayPreset? get selectedDisplay => _selectedDisplay;
 
   void _updateState(AuthState newState) {
     if (_currentState != newState) {
@@ -213,9 +217,9 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Fetch available OSD displays for the user
-  /// Uses server_displays table (same as SDS)
-  Future<List<OsdDisplay>> fetchOsdDisplays() async {
+  /// Fetch available displays for the user
+  /// Uses the unified display_category_presets API
+  Future<List<DisplayPreset>> fetchOsdDisplays() async {
     try {
       if (_currentUser == null || _currentUser!.organizationId == null) {
         debugPrint('❌ [OSD AUTH] No user or organization ID available');
@@ -223,22 +227,23 @@ class AuthService extends ChangeNotifier {
       }
 
       debugPrint(
-          '🔍 [OSD AUTH] Fetching OSD displays for org: ${_currentUser!.organizationId}');
+          '🔍 [OSD AUTH] Fetching displays for org: ${_currentUser!.organizationId}');
 
       final response = await _apiClient.get<Map<String, dynamic>>(
-        ApiEndpoints.osdDisplays,
-        queryParameters: {'organization_id': _currentUser!.organizationId},
+        ApiEndpoints.displayPresets,
+        queryParameters: {
+          'organization_id': _currentUser!.organizationId,
+          'active_only': 'true',
+          'include_categories': 'true',
+        },
       );
 
       if (response.success && response.data != null) {
-        // Try different possible response formats
-        final displaysData = response.data!['serverDisplays'] as List<dynamic>? ??
-            response.data!['displays'] as List<dynamic>? ??
-            response.data!['data'] as List<dynamic>?;
+        final displaysData = response.data!['presets'] as List<dynamic>?;
 
         if (displaysData != null) {
           _availableDisplays = displaysData
-              .map((d) => OsdDisplay.fromJson(d as Map<String, dynamic>))
+              .map((d) => DisplayPreset.fromJson(d as Map<String, dynamic>))
               .where((d) => d.active)
               .toList();
 
@@ -258,9 +263,18 @@ class AuthService extends ChangeNotifier {
   }
 
   /// Select an OSD display and configure SettingsService
-  Future<void> selectDisplay(OsdDisplay display) async {
+  Future<void> selectDisplay(DisplayPreset display) async {
     _selectedDisplay = display;
     debugPrint('✅ [OSD AUTH] Selected display: ${display.name} (${display.id})');
+
+    // Save the selected display ID to SharedPreferences for auto-selection on next launch
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_lastSelectedDisplayIdKey, display.id);
+      debugPrint('💾 [OSD AUTH] Saved last selected display ID: ${display.id}');
+    } catch (e) {
+      debugPrint('⚠️ [OSD AUTH] Failed to save last selected display ID: $e');
+    }
 
     // Configure SettingsService with the selected display info
     final settingsService = SettingsService.instance;
@@ -288,6 +302,67 @@ class AuthService extends ChangeNotifier {
   void clearSelectedDisplay() {
     _selectedDisplay = null;
     notifyListeners();
+  }
+
+  /// Get the display to auto-select based on:
+  /// 1. Previously selected display (from SharedPreferences)
+  /// 2. Default display (if single store)
+  /// Returns null if selection screen should be shown
+  Future<DisplayPreset?> getAutoSelectDisplay(List<DisplayPreset> displays) async {
+    if (displays.isEmpty) return null;
+
+    // If only one display, always auto-select it
+    if (displays.length == 1) {
+      debugPrint('🎯 [OSD AUTH] Auto-select: Only one display available');
+      return displays.first;
+    }
+
+    // Try to find previously selected display
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastDisplayId = prefs.getString(_lastSelectedDisplayIdKey);
+
+      if (lastDisplayId != null) {
+        final remembered = displays.where((d) => d.id == lastDisplayId).firstOrNull;
+        if (remembered != null && remembered.active) {
+          debugPrint('🎯 [OSD AUTH] Auto-select: Using previously selected display: ${remembered.name}');
+          return remembered;
+        } else {
+          debugPrint('ℹ️ [OSD AUTH] Previously selected display not found or inactive');
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [OSD AUTH] Failed to read last selected display ID: $e');
+    }
+
+    // Check if all displays belong to the same store
+    final uniqueStoreIds = displays.map((d) => d.storeId).toSet();
+
+    if (uniqueStoreIds.length == 1) {
+      // Single store: look for default display
+      final defaultDisplay = displays.where((d) => d.isDefault).firstOrNull;
+      if (defaultDisplay != null) {
+        debugPrint('🎯 [OSD AUTH] Auto-select: Using default display for single store: ${defaultDisplay.name}');
+        return defaultDisplay;
+      }
+    } else {
+      debugPrint('ℹ️ [OSD AUTH] Multiple stores detected (${uniqueStoreIds.length}), showing selection screen');
+    }
+
+    // No auto-selection possible
+    debugPrint('ℹ️ [OSD AUTH] No auto-select criteria met, showing selection screen');
+    return null;
+  }
+
+  /// Clear the saved last selected display ID
+  Future<void> clearLastSelectedDisplay() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_lastSelectedDisplayIdKey);
+      debugPrint('🗑️ [OSD AUTH] Cleared last selected display ID');
+    } catch (e) {
+      debugPrint('⚠️ [OSD AUTH] Failed to clear last selected display ID: $e');
+    }
   }
 
   /// Sign out
