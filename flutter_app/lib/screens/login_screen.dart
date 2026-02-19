@@ -254,31 +254,17 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         // App Logo
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2196F3),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF2196F3).withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Image.asset(
-            'assets/icons/app_icon.png',
-            width: 48,
-            height: 48,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(
-                Icons.monitor,
-                size: 48,
-                color: Colors.white,
-              );
-            },
-          ),
+        Image.asset(
+          'assets/icons/app_icon.png',
+          width: 100,
+          height: 100,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.monitor,
+              size: 100,
+              color: Color(0xFF2196F3),
+            );
+          },
         ),
 
         const SizedBox(height: 16),
