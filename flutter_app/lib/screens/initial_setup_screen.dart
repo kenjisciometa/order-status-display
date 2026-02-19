@@ -72,17 +72,21 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
           _isLoading = false;
           _errorMessage = 'No displays available for this account.';
         });
-      } else if (displays.length == 1) {
-        // Auto-select single display
-        await authService.selectDisplay(displays.first);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
-        );
       } else {
-        // Show display selection
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
-        );
+        // Try to auto-select a display
+        final autoSelect = await authService.getAutoSelectDisplay(displays);
+
+        if (autoSelect != null) {
+          await authService.selectDisplay(autoSelect);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
+          );
+        } else {
+          // Show display selection
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
+          );
+        }
       }
     } else {
       setState(() {

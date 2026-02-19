@@ -337,21 +337,22 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsService = Provider.of<SettingsService>(context);
-    final isDarkMode = settingsService.isDarkMode;
+    // Always use light mode (white-based UI like KDS)
+    const isDarkMode = false;
 
     return MouseRegion(
       cursor: _showCursor ? SystemMouseCursors.basic : SystemMouseCursors.none,
       onHover: (_) => _resetCursorHideTimer(),
       onEnter: (_) => _resetCursorHideTimer(),
       child: Scaffold(
-        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFF5F5F5),
         body: Stack(
           children: [
             // Main content (full screen)
             _isLoading
-                ? Center(
+                ? const Center(
                     child: CircularProgressIndicator(
-                      color: isDarkMode ? const Color(0xFF00D9FF) : const Color(0xFF2196F3),
+                      color: Color(0xFF2196F3),
                     ),
                   )
                 : _buildMainContent(isDarkMode, settingsService.showElapsedTimeNowCooking, settingsService.showElapsedTimeReady),
@@ -442,12 +443,13 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
   /// Show connection details dialog
   void _showConnectionDetails() {
-    final isDarkMode = Provider.of<SettingsService>(context, listen: false).isDarkMode;
+    // Always use light mode (white-based UI like KDS)
+    const isDarkMode = false;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : Colors.white,
+        backgroundColor: Colors.white,
         title: Row(
           children: [
             Container(
@@ -461,8 +463,8 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             const SizedBox(width: 8),
             Text(
               _isConnected ? 'Connected' : 'Disconnected',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+              style: const TextStyle(
+                color: Colors.black,
               ),
             ),
           ],
@@ -474,7 +476,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             if (_errorMessage != null) ...[
               Text(
                 'Error: $_errorMessage',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.red,
                   fontSize: 14,
                 ),
@@ -483,15 +485,15 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             ],
             Text(
               'Now Cooking: ${_nowCookingOrders.length}',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
+              style: const TextStyle(
+                color: Colors.black87,
                 fontSize: 14,
               ),
             ),
             Text(
               'Ready: ${_readyOrders.length}',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
+              style: const TextStyle(
+                color: Colors.black87,
                 fontSize: 14,
               ),
             ),

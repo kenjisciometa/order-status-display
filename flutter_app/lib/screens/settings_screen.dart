@@ -50,12 +50,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final authService = Provider.of<AuthService>(context);
     final deviceService = Provider.of<DeviceControlService>(context);
     final webSocketService = OsdWebSocketService.instance;
-    final isDarkMode = settingsService.isDarkMode;
+    // Always use light mode (white-based UI like KDS)
+    const isDarkMode = false;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: isDarkMode ? const Color(0xFF0F3460) : const Color(0xFF2196F3),
+        backgroundColor: const Color(0xFF2196F3),
+        foregroundColor: Colors.white,
         toolbarHeight: 80,
         title: const Text(
           'Settings',
@@ -159,28 +161,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionHeader('APPEARANCE'),
-                    _buildSwitchTile(
-                      title: 'Dark Mode',
-                      subtitle: 'Switch between dark and light theme',
-                      value: settingsService.isDarkMode,
-                      onChanged: (value) => settingsService.setDarkMode(value),
-                      isDarkMode: isDarkMode,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
 
           const SizedBox(height: 24),
 
-          // Row 3: Device Control (2 components in 1 row)
+          // Row 2: Device Control (2 components in 1 row)
           _buildSectionHeader('DEVICE CONTROL'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,7 +304,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Sciometa OSD v1.0.0',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.grey.shade500,
               ),
             ),
           ),
@@ -335,7 +321,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00D9FF),
+          color: Color(0xFF2196F3),
           letterSpacing: 1.5,
         ),
       ),
@@ -426,7 +412,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         value: value,
         onChanged: onChanged,
-        activeColor: const Color(0xFF00D9FF),
+        activeColor: const Color(0xFF2196F3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -484,7 +470,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Slider(
               value: value,
               onChanged: onChanged,
-              activeColor: const Color(0xFF00D9FF),
+              activeColor: const Color(0xFF2196F3),
               inactiveColor: isDarkMode ? Colors.white24 : Colors.grey.shade300,
             ),
           ),

@@ -44,10 +44,13 @@ class ApiEndpoints {
   static const String resetPassword = '/api/auth/reset-password';
   static const String profile = '/api/profile';
 
-  // OSD Display endpoints (uses server_displays table)
-  static const String osdDisplays = '/api/server-displays';
-  static const String osdDisplaysTable = 'server_displays'; // Table name for OSD
-  static String osdDisplayById(String id) => '/api/server-displays/$id';
+  // Display Preset endpoints (unified display configuration using display_category_presets)
+  static const String displayPresets = '/api/display-category-presets';
+  static String displayPresetById(String id) => '/api/display-category-presets/$id';
+
+  // OSD Display endpoints
+  static const String osdDisplays = '/api/display-category-presets';
+  static String osdDisplayById(String id) => '/api/display-category-presets/$id';
 
   // OSD Order API - Reuses KDS orders endpoint (shared infrastructure)
   // OSD only reads orders, does not update them
@@ -68,13 +71,9 @@ class ApiEndpoints {
   // OSD Header Colors API (for display styling)
   static const String osdSettingsColors = '/api/kds/settings/colors';
 
-  // OSD Display Config API (uses server_displays table)
+  // OSD Display Config API (uses display_category_presets table)
   static String osdDisplayConfig(String displayId) =>
-      '/api/server-displays/$displayId';
-
-  // OSD Display Heartbeat API
-  static String osdDisplayHeartbeat(String displayId) =>
-      '/api/server-displays/$displayId';
+      '/api/display-category-presets/$displayId';
 
   // Store endpoints
   static const String stores = '/api/stores';
