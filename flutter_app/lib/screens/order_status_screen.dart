@@ -221,7 +221,10 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         _nowCookingOrders.clear();
         _readyOrders.clear();
 
-        for (final order in orders) {
+        // Group split orders by parent order number
+        final groupedOrders = _groupSplitOrders(orders);
+
+        for (final order in groupedOrders) {
           if (order.isNowCooking) {
             _nowCookingOrders.add(order);
           } else if (order.isReady) {
@@ -257,6 +260,80 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         _errorMessage = 'Failed to load orders';
       });
     }
+  }
+
+  /// Group split orders by their parent order number
+  ///
+  /// Split orders (e.g., ORD-0001-1, ORD-0001-2) are merged into a single
+  /// representative order for display purposes. The representative order
+  /// uses the parent order number and aggregates status from all splits.
+  ///
+  /// Rules:
+  /// - If ANY split is 'pending', the group is shown as 'pending' (Now Cooking)
+  /// - Only when ALL splits are 'ready', the group is shown as 'ready' (It's Ready)
+  /// - Non-split orders pass through unchanged
+  List<OsdOrder> _groupSplitOrders(List<OsdOrder> orders) {
+    // Separate split orders from non-split orders
+    final nonSplitOrders = <OsdOrder>[];
+    final splitOrderGroups = <String, List<OsdOrder>>{};
+
+    for (final order in orders) {
+      if (order.isSplitOrder && order.parentOrderNumber != null) {
+        // Group by parent order number
+        final parentNumber = order.parentOrderNumber!;
+        splitOrderGroups.putIfAbsent(parentNumber, () => []);
+        splitOrderGroups[parentNumber]!.add(order);
+      } else {
+        nonSplitOrders.add(order);
+      }
+    }
+
+    // Process each split order group
+    final mergedOrders = <OsdOrder>[];
+    for (final entry in splitOrderGroups.entries) {
+      final parentNumber = entry.key;
+      final splits = entry.value;
+
+      if (splits.isEmpty) continue;
+
+      // Determine the aggregate status
+      // If ANY split is 'pending', show as 'pending'
+      // Only if ALL are 'ready', show as 'ready'
+      final hasAnyCooking = splits.any((o) => o.isNowCooking);
+      final aggregateStatus = hasAnyCooking ? 'pending' : 'ready';
+
+      // Use the first split as the representative, but update its status
+      // and ensure it uses the parent order number
+      final representative = splits.first;
+
+      // Find earliest createdAt and latest readyAt among all splits
+      DateTime earliestCreatedAt = representative.createdAt;
+      DateTime? latestReadyAt = representative.readyAt;
+      for (final split in splits) {
+        if (split.createdAt.isBefore(earliestCreatedAt)) {
+          earliestCreatedAt = split.createdAt;
+        }
+        if (split.readyAt != null) {
+          if (latestReadyAt == null || split.readyAt!.isAfter(latestReadyAt)) {
+            latestReadyAt = split.readyAt;
+          }
+        }
+      }
+
+      // Create a merged order with parent order number
+      final mergedOrder = representative.copyWith(
+        orderNumber: parentNumber,
+        displayStatus: aggregateStatus,
+        createdAt: earliestCreatedAt,
+        readyAt: aggregateStatus == 'ready' ? latestReadyAt : null,
+      );
+
+      mergedOrders.add(mergedOrder);
+      debugPrint('🔀 [OSD] Merged ${splits.length} split orders for $parentNumber → status: $aggregateStatus');
+    }
+
+    // Combine non-split orders with merged split orders
+    return [...nonSplitOrders, ...mergedOrders];
   }
 
   /// Start UI timers (KDS-style: PURE WEBSOCKET MODE)
