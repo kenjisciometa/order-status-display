@@ -1,6 +1,6 @@
 /// OSD Display model
 /// Represents a display device for Order Status Display system
-/// Uses server_displays table (same as SDS)
+/// Uses display_category_presets table (unified model for KDS/SDS/OSD)
 class OsdDisplay {
   final String id;
   final String name;

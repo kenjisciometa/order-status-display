@@ -221,7 +221,10 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         _nowCookingOrders.clear();
         _readyOrders.clear();
 
-        for (final order in orders) {
+        // Group split orders by parent order number
+        final groupedOrders = _groupSplitOrders(orders);
+
+        for (final order in groupedOrders) {
           if (order.isNowCooking) {
             _nowCookingOrders.add(order);
           } else if (order.isReady) {
@@ -257,6 +260,80 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         _errorMessage = 'Failed to load orders';
       });
     }
+  }
+
+  /// Group split orders by their parent order number
+  ///
+  /// Split orders (e.g., ORD-0001-1, ORD-0001-2) are merged into a single
+  /// representative order for display purposes. The representative order
+  /// uses the parent order number and aggregates status from all splits.
+  ///
+  /// Rules:
+  /// - If ANY split is 'pending', the group is shown as 'pending' (Now Cooking)
+  /// - Only when ALL splits are 'ready', the group is shown as 'ready' (It's Ready)
+  /// - Non-split orders pass through unchanged
+  List<OsdOrder> _groupSplitOrders(List<OsdOrder> orders) {
+    // Separate split orders from non-split orders
+    final nonSplitOrders = <OsdOrder>[];
+    final splitOrderGroups = <String, List<OsdOrder>>{};
+
+    for (final order in orders) {
+      if (order.isSplitOrder && order.parentOrderNumber != null) {
+        // Group by parent order number
+        final parentNumber = order.parentOrderNumber!;
+        splitOrderGroups.putIfAbsent(parentNumber, () => []);
+        splitOrderGroups[parentNumber]!.add(order);
+      } else {
+        nonSplitOrders.add(order);
+      }
+    }
+
+    // Process each split order group
+    final mergedOrders = <OsdOrder>[];
+    for (final entry in splitOrderGroups.entries) {
+      final parentNumber = entry.key;
+      final splits = entry.value;
+
+      if (splits.isEmpty) continue;
+
+      // Determine the aggregate status
+      // If ANY split is 'pending', show as 'pending'
+      // Only if ALL are 'ready', show as 'ready'
+      final hasAnyCooking = splits.any((o) => o.isNowCooking);
+      final aggregateStatus = hasAnyCooking ? 'pending' : 'ready';
+
+      // Use the first split as the representative, but update its status
+      // and ensure it uses the parent order number
+      final representative = splits.first;
+
+      // Find earliest createdAt and latest readyAt among all splits
+      DateTime earliestCreatedAt = representative.createdAt;
+      DateTime? latestReadyAt = representative.readyAt;
+      for (final split in splits) {
+        if (split.createdAt.isBefore(earliestCreatedAt)) {
+          earliestCreatedAt = split.createdAt;
+        }
+        if (split.readyAt != null) {
+          if (latestReadyAt == null || split.readyAt!.isAfter(latestReadyAt)) {
+            latestReadyAt = split.readyAt;
+          }
+        }
+      }
+
+      // Create a merged order with parent order number
+      final mergedOrder = representative.copyWith(
+        orderNumber: parentNumber,
+        displayStatus: aggregateStatus,
+        createdAt: earliestCreatedAt,
+        readyAt: aggregateStatus == 'ready' ? latestReadyAt : null,
+      );
+
+      mergedOrders.add(mergedOrder);
+      debugPrint('🔀 [OSD] Merged ${splits.length} split orders for $parentNumber → status: $aggregateStatus');
+    }
+
+    // Combine non-split orders with merged split orders
+    return [...nonSplitOrders, ...mergedOrders];
   }
 
   /// Start UI timers (KDS-style: PURE WEBSOCKET MODE)
@@ -337,21 +414,22 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsService = Provider.of<SettingsService>(context);
-    final isDarkMode = settingsService.isDarkMode;
+    // Always use light mode (white-based UI like KDS)
+    const isDarkMode = false;
 
     return MouseRegion(
       cursor: _showCursor ? SystemMouseCursors.basic : SystemMouseCursors.none,
       onHover: (_) => _resetCursorHideTimer(),
       onEnter: (_) => _resetCursorHideTimer(),
       child: Scaffold(
-        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFF5F5F5),
         body: Stack(
           children: [
             // Main content (full screen)
             _isLoading
-                ? Center(
+                ? const Center(
                     child: CircularProgressIndicator(
-                      color: isDarkMode ? const Color(0xFF00D9FF) : const Color(0xFF2196F3),
+                      color: Color(0xFF2196F3),
                     ),
                   )
                 : _buildMainContent(isDarkMode, settingsService.showElapsedTimeNowCooking, settingsService.showElapsedTimeReady),
@@ -442,12 +520,13 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
   /// Show connection details dialog
   void _showConnectionDetails() {
-    final isDarkMode = Provider.of<SettingsService>(context, listen: false).isDarkMode;
+    // Always use light mode (white-based UI like KDS)
+    const isDarkMode = false;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : Colors.white,
+        backgroundColor: Colors.white,
         title: Row(
           children: [
             Container(
@@ -461,8 +540,8 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             const SizedBox(width: 8),
             Text(
               _isConnected ? 'Connected' : 'Disconnected',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+              style: const TextStyle(
+                color: Colors.black,
               ),
             ),
           ],
@@ -474,7 +553,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             if (_errorMessage != null) ...[
               Text(
                 'Error: $_errorMessage',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.red,
                   fontSize: 14,
                 ),
@@ -483,15 +562,15 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             ],
             Text(
               'Now Cooking: ${_nowCookingOrders.length}',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
+              style: const TextStyle(
+                color: Colors.black87,
                 fontSize: 14,
               ),
             ),
             Text(
               'Ready: ${_readyOrders.length}',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
+              style: const TextStyle(
+                color: Colors.black87,
                 fontSize: 14,
               ),
             ),

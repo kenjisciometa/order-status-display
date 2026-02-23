@@ -1,14 +1,14 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 import 'display_selection_screen.dart';
 import 'order_status_screen.dart';
 
 /// Login Screen
 ///
-/// Allows users to authenticate with email and password.
+/// Allows users to authenticate with email and password or Google.
+/// Two-column layout on wide screens (Email left, Google right).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -22,7 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _rememberMe = true;
+  bool _isGoogleLoading = false;
+  bool _rememberMe = false;
   bool _obscurePassword = true;
   String? _errorMessage;
 
@@ -96,17 +97,21 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _errorMessage = 'No displays available for this account.';
         });
-      } else if (displays.length == 1) {
-        // Auto-select single display
-        await authService.selectDisplay(displays.first);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
-        );
       } else {
-        // Show display selection
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
-        );
+        // Try to auto-select a display
+        final autoSelect = await authService.getAutoSelectDisplay(displays);
+
+        if (autoSelect != null) {
+          await authService.selectDisplay(autoSelect);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
+          );
+        } else {
+          // Show display selection
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
+          );
+        }
       }
     } else {
       setState(() {
@@ -118,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Handle Google Sign-In (Android only)
   Future<void> _handleGoogleLogin() async {
     setState(() {
-      _isLoading = true;
+      _isGoogleLoading = true;
       _errorMessage = null;
     });
 
@@ -128,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     setState(() {
-      _isLoading = false;
+      _isGoogleLoading = false;
     });
 
     if (result.isAuthenticated) {
@@ -141,17 +146,21 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _errorMessage = 'No displays available for this account.';
         });
-      } else if (displays.length == 1) {
-        // Auto-select single display
-        await authService.selectDisplay(displays.first);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
-        );
       } else {
-        // Show display selection
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
-        );
+        // Try to auto-select a display
+        final autoSelect = await authService.getAutoSelectDisplay(displays);
+
+        if (autoSelect != null) {
+          await authService.selectDisplay(autoSelect);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
+          );
+        } else {
+          // Show display selection
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
+          );
+        }
       }
     } else {
       setState(() {
@@ -162,288 +171,78 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 700;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF0F3460),
-                        Color(0xFF00D9FF),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00D9FF).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.monitor,
-                    size: 64,
-                    color: Colors.white,
-                  ),
-                ),
+      backgroundColor: const Color(0xFFBBDEFB), // Blue-200 surface (OSD theme)
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Header section (Logo + Title)
+                    _buildHeader(),
 
-                const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                const Text(
-                  'Sciometa OSD',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Order Status Display',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.6),
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // Login form
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // Email field
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: _inputDecoration(
-                          label: 'Email',
-                          icon: Icons.email_outlined,
+                    // Error message
+                    if (_errorMessage != null)
+                      Container(
+                        constraints: BoxConstraints(maxWidth: isWideScreen ? 700 : 400),
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFFCA5A5)),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Password field
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: _inputDecoration(
-                          label: 'Password',
-                          icon: Icons.lock_outlined,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: Colors.white54,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Remember me checkbox
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _rememberMe,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                            fillColor: WidgetStateProperty.resolveWith((states) {
-                              if (states.contains(WidgetState.selected)) {
-                                return const Color(0xFF00D9FF);
-                              }
-                              return Colors.white24;
-                            }),
-                          ),
-                          Text(
-                            'Remember me',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Error message
-                      if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF44336).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(0xFFF44336).withOpacity(0.5),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.error_outline,
-                                color: Color(0xFFF44336),
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _errorMessage!,
-                                  style: const TextStyle(
-                                    color: Color(0xFFF44336),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 24),
-
-                      // Login button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00D9FF),
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.black,
-                                  ),
-                                )
-                              : const Text(
-                                  'Login',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ),
-
-                      // Google Sign-In button (Android only)
-                      if (Platform.isAndroid) ...[
-                        const SizedBox(height: 16),
-                        Row(
+                        child: Row(
                           children: [
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                color: Colors.white24,
-                              ),
+                            const Icon(
+                              Icons.error_outline,
+                              color: Color(0xFFDC2626),
+                              size: 20,
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
                               child: Text(
-                                'OR',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 12,
+                                _errorMessage!,
+                                style: const TextStyle(
+                                  color: Color(0xFFDC2626),
+                                  fontSize: 14,
                                 ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                color: Colors.white24,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: OutlinedButton(
-                            onPressed: _isLoading ? null : _handleGoogleLogin,
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF3C4043),
-                              side: const BorderSide(color: Color(0xFFDADCE0)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/icons/google_logo.svg',
-                                  width: 20,
-                                  height: 20,
-                                ),
-                                const SizedBox(width: 12),
-                                const Text(
-                                  'Sign in with Google',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                      ),
+
+                    // Login Cards - Side by side on wide screens
+                    if (isWideScreen && Platform.isAndroid)
+                      _buildTwoColumnLayout()
+                    else
+                      _buildSingleColumnLayout(),
+
+                    const SizedBox(height: 24),
+
+                    // Footer
+                    const Text(
+                      'Use your POS account to sign in',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -451,41 +250,419 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-      prefixIcon: Icon(icon, color: Colors.white54),
-      suffixIcon: suffixIcon,
-      filled: true,
-      fillColor: const Color(0xFF16213E),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: Color(0xFF00D9FF),
-          width: 2,
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        // App Logo
+        Image.asset(
+          'assets/icons/app_icon.png',
+          width: 100,
+          height: 100,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.monitor,
+              size: 100,
+              color: Color(0xFF2196F3),
+            );
+          },
         ),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: Color(0xFFF44336),
+
+        const SizedBox(height: 16),
+
+        // App Title
+        const Text(
+          'Sciometa OSD',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF111827),
+            letterSpacing: -0.5,
+          ),
+          textAlign: TextAlign.center,
         ),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: Color(0xFFF44336),
-          width: 2,
+
+        const SizedBox(height: 4),
+
+        const Text(
+          'Order Status Display',
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF6B7280),
+          ),
+          textAlign: TextAlign.center,
         ),
+      ],
+    );
+  }
+
+  Widget _buildTwoColumnLayout() {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 800),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left: Email Login
+          Expanded(
+            child: _buildEmailLoginCard(),
+          ),
+
+          const SizedBox(width: 24),
+
+          // Right: Google Login
+          Expanded(
+            child: _buildGoogleLoginCard(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleColumnLayout() {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 400),
+      child: Column(
+        children: [
+          _buildEmailLoginCard(),
+
+          if (Platform.isAndroid) ...[
+            const SizedBox(height: 16),
+
+            // Divider
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 1,
+                    color: const Color(0xFFE5E7EB),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'or',
+                    style: TextStyle(
+                      color: Color(0xFF9CA3AF),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    height: 1,
+                    color: const Color(0xFFE5E7EB),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            _buildGoogleLoginCard(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmailLoginCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFBBDEFB),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.email_outlined,
+                  color: Color(0xFF2196F3),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Email Sign In',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF111827),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Email field
+          TextFormField(
+            controller: _emailController,
+            decoration: InputDecoration(
+              labelText: 'Email',
+              prefixIcon: const Icon(Icons.email_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: const Color(0xFFF9FAFB),
+            ),
+            keyboardType: TextInputType.emailAddress,
+            enabled: !_isLoading && !_isGoogleLoading,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your email';
+              }
+              if (!value.contains('@')) {
+                return 'Please enter a valid email';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Password field
+          TextFormField(
+            controller: _passwordController,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              prefixIcon: const Icon(Icons.lock_outlined),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: const Color(0xFFF9FAFB),
+            ),
+            obscureText: _obscurePassword,
+            enabled: !_isLoading && !_isGoogleLoading,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your password';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          // Remember me checkbox
+          CheckboxListTile(
+            value: _rememberMe,
+            onChanged: (_isLoading || _isGoogleLoading)
+                ? null
+                : (value) {
+                    setState(() {
+                      _rememberMe = value ?? false;
+                    });
+                  },
+            title: const Text(
+              'Auto-login next time',
+              style: TextStyle(fontSize: 14),
+            ),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            activeColor: const Color(0xFF2196F3),
+            dense: true,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Login button
+          SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: (_isLoading || _isGoogleLoading) ? null : _handleLogin,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2196F3),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 2,
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Sign In',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoogleLoginCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEBF5FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.g_mobiledata,
+                  color: Color(0xFF4285F4),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Google Sign In',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF111827),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Description
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quick & Secure',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Sign in with your Google account linked to your POS system. No password required.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6B7280),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Google Sign-In button
+          SizedBox(
+            height: 48,
+            child: OutlinedButton(
+              onPressed: (_isLoading || _isGoogleLoading) ? null : _handleGoogleLogin,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF374151),
+                side: const BorderSide(
+                  color: Color(0xFFD1D5DB),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                backgroundColor: Colors.white,
+              ),
+              child: _isGoogleLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFF6B7280)),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.network(
+                          'https://www.google.com/favicon.ico',
+                          height: 20,
+                          width: 20,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.g_mobiledata,
+                              size: 24,
+                              color: Color(0xFF4285F4),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

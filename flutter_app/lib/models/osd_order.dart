@@ -70,15 +70,77 @@ class OsdOrder {
   }
 
   /// Format order number for display
+  /// Handles split order numbers by extracting the parent order number
+  /// e.g., "ORD-0001-1" or "ORD-0001-2" → "#0001"
   String _formatOrderNumber() {
     if (orderNumber != null) {
+      // Extract parent order number (remove split suffix like "-1", "-2", "-1/2", "-2/2")
+      final parentNumber = _extractParentOrderNumber(orderNumber!);
+
       // Extract last 4 characters if order number is long
-      if (orderNumber!.length > 4) {
-        return '#${orderNumber!.substring(orderNumber!.length - 4)}';
+      if (parentNumber.length > 4) {
+        return '#${parentNumber.substring(parentNumber.length - 4)}';
       }
-      return '#$orderNumber';
+      return '#$parentNumber';
     }
     return '---';
+  }
+
+  /// Extract the parent order number from a potentially split order number
+  /// Examples:
+  /// - "ORD-0001-1" → "ORD-0001"
+  /// - "ORD-0001-2/2" → "ORD-0001"
+  /// - "ORD-0001-1/2" → "ORD-0001"
+  /// - "ORD-0001" → "ORD-0001" (no change)
+  /// - "BOS-0001-1" → "BOS-0001"
+  static String _extractParentOrderNumber(String orderNumber) {
+    // Split order format: BASE-N or BASE-N/M
+    // where BASE is like "ORD-0001" or "BOS-0001"
+    // and N, M are single digits (split index/total)
+    //
+    // We need to match ONLY the split suffix at the end:
+    // -1, -2, -1/2, -2/2, -3/3 etc.
+    // But NOT the base number like -0001
+    //
+    // Split suffix pattern: dash followed by 1-2 digits, optionally followed by /digits
+    // The key is that split indices are typically small numbers (1-9)
+    // while base numbers are 4+ digits (0001, 0002, etc.)
+    final splitSuffixPattern = RegExp(r'-(\d{1,2})(/\d+)?$');
+    final match = splitSuffixPattern.firstMatch(orderNumber);
+
+    if (match != null) {
+      // Check if the matched number is likely a split index (small number)
+      // vs part of the base order number (typically 4+ digits)
+      final matchedNumber = match.group(1);
+      if (matchedNumber != null && matchedNumber.length <= 2) {
+        // This looks like a split suffix, remove it
+        return orderNumber.substring(0, match.start);
+      }
+    }
+
+    // No split suffix found, return as-is
+    return orderNumber;
+  }
+
+  /// Get the parent order number (for grouping split orders)
+  /// Returns the order number without split suffix
+  String? get parentOrderNumber {
+    if (orderNumber == null) return null;
+    return _extractParentOrderNumber(orderNumber!);
+  }
+
+  /// Check if this order is a split order
+  bool get isSplitOrder {
+    if (orderNumber == null) return false;
+    // Split suffix: -N or -N/M where N is 1-2 digits
+    final splitSuffixPattern = RegExp(r'-(\d{1,2})(/\d+)?$');
+    final match = splitSuffixPattern.firstMatch(orderNumber!);
+    if (match != null) {
+      final matchedNumber = match.group(1);
+      // Only consider it a split if the suffix is a small number (1-2 digits)
+      return matchedNumber != null && matchedNumber.length <= 2;
+    }
+    return false;
   }
 
   /// Get display label based on settings (e.g., "", "Table", "Order")

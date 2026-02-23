@@ -257,20 +257,24 @@ class _InitialScreenState extends State<InitialScreen> {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const LoginScreen()),
           );
-        } else if (displays.length == 1) {
-          // Only one display, auto-select and go to main screen
-          debugPrint(
-              '*** OSD MAIN: Auto-selecting single display: ${displays.first.name}');
-          await authService.selectDisplay(displays.first);
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
-          );
         } else {
-          // Multiple displays, show selection screen
-          debugPrint('*** OSD MAIN: Multiple displays, showing selection screen');
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
-          );
+          // Try to auto-select a display
+          final autoSelect = await authService.getAutoSelectDisplay(displays);
+
+          if (autoSelect != null) {
+            // Auto-select and go to main screen
+            debugPrint('*** OSD MAIN: Auto-selecting display: ${autoSelect.name}');
+            await authService.selectDisplay(autoSelect);
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const OrderStatusScreen()),
+            );
+          } else {
+            // Show selection screen
+            debugPrint('*** OSD MAIN: Showing display selection screen');
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const DisplaySelectionScreen()),
+            );
+          }
         }
       } else {
         // Not authenticated, check if this is first time setup needed
@@ -333,37 +337,16 @@ class _InitialScreenState extends State<InitialScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // App Logo/Icon
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0F3460),
-                    Color(0xFF00D9FF),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF00D9FF).withOpacity(0.3),
-                    blurRadius: 25,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.monitor,
-                size: 80,
-                color: Colors.white,
-              ),
+            // App Icon
+            Image.asset(
+              'assets/icons/app_icon.png',
+              width: 120,
+              height: 120,
             ),
 
             const SizedBox(height: 32),
@@ -374,7 +357,7 @@ class _InitialScreenState extends State<InitialScreen> {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: Color(0xFF111827),
                 letterSpacing: -0.5,
               ),
             ),
@@ -385,7 +368,7 @@ class _InitialScreenState extends State<InitialScreen> {
               'Order Status Display',
               style: TextStyle(
                 fontSize: 16,
-                color: Color(0xFF9CA3AF),
+                color: Color(0xFF6B7280),
               ),
             ),
 
@@ -398,7 +381,7 @@ class _InitialScreenState extends State<InitialScreen> {
               child: CircularProgressIndicator(
                 strokeWidth: 3,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  Color(0xFF00D9FF),
+                  Color(0xFF2196F3),
                 ),
               ),
             ),
