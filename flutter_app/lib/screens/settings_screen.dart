@@ -990,191 +990,240 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final scrollController = ScrollController();
+    final emailFocusNode = FocusNode();
+    final passwordFocusNode = FocusNode();
     bool isLoading = false;
     bool obscurePassword = true;
     String? errorMessage;
+
+    // Helper to scroll to focused field
+    void scrollToFocused() {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (scrollController.hasClients) {
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+
+    emailFocusNode.addListener(() {
+      if (emailFocusNode.hasFocus) scrollToFocused();
+    });
+    passwordFocusNode.addListener(() {
+      if (passwordFocusNode.hasFocus) scrollToFocused();
+    });
 
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) => Dialog(
           backgroundColor: const Color(0xFF16213E),
-          title: const Row(
-            children: [
-              Icon(Icons.login, color: Color(0xFF00D9FF)),
-              SizedBox(width: 12),
-              Text(
-                'Enable Auto Login',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: SizedBox(
-            width: 400,
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Enter credentials to save for automatic login.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration(
-                      'Password',
-                      Icons.lock_outlined,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: Colors.white54,
-                        ),
-                        onPressed: () {
-                          setDialogState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF44336).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            color: Color(0xFFF44336),
-                            size: 20,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450, maxHeight: 500),
+            child: SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    const Row(
+                      children: [
+                        Icon(Icons.login, color: Color(0xFF00D9FF)),
+                        SizedBox(width: 12),
+                        Text(
+                          'Enable Auto Login',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              errorMessage!,
-                              style: const TextStyle(
-                                color: Color(0xFFF44336),
-                                fontSize: 14,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Enter credentials to save for automatic login.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: emailController,
+                      focusNode: emailFocusNode,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: passwordController,
+                      focusNode: passwordFocusNode,
+                      obscureText: obscurePassword,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration(
+                        'Password',
+                        Icons.lock_outlined,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.white54,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF44336).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Color(0xFFF44336),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: Color(0xFFF44336),
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 24),
+                    // Action buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+
+                                  setDialogState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                  });
+
+                                  // Test credentials
+                                  final authService = AuthService.instance;
+                                  final result = await authService.signInWithEmailPassword(
+                                    email: emailController.text.trim(),
+                                    password: passwordController.text,
+                                    rememberMe: true,
+                                  );
+
+                                  if (result.isAuthenticated) {
+                                    // Save credentials
+                                    final apiClient = ApiClientService.instance;
+                                    await apiClient.setAutoLoginEnabled(true);
+                                    await apiClient.storeCredentials(
+                                      emailController.text.trim(),
+                                      passwordController.text,
+                                    );
+
+                                    Navigator.of(context).pop();
+
+                                    // Refresh state
+                                    await _loadAutoLoginSettings();
+
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(this.context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Auto login enabled successfully'),
+                                          backgroundColor: Color(0xFF4CAF50),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      errorMessage = result.errorMessage ?? 'Invalid credentials';
+                                    });
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00D9FF),
+                            foregroundColor: Colors.black,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                  ),
+                                )
+                              : const Text('Enable'),
+                        ),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-
-                      setDialogState(() {
-                        isLoading = true;
-                        errorMessage = null;
-                      });
-
-                      // Test credentials
-                      final authService = AuthService.instance;
-                      final result = await authService.signInWithEmailPassword(
-                        email: emailController.text.trim(),
-                        password: passwordController.text,
-                        rememberMe: true,
-                      );
-
-                      if (result.isAuthenticated) {
-                        // Save credentials
-                        final apiClient = ApiClientService.instance;
-                        await apiClient.setAutoLoginEnabled(true);
-                        await apiClient.storeCredentials(
-                          emailController.text.trim(),
-                          passwordController.text,
-                        );
-
-                        Navigator.of(context).pop();
-
-                        // Refresh state
-                        await _loadAutoLoginSettings();
-
-                        if (mounted) {
-                          ScaffoldMessenger.of(this.context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Auto login enabled successfully'),
-                              backgroundColor: Color(0xFF4CAF50),
-                            ),
-                          );
-                        }
-                      } else {
-                        setDialogState(() {
-                          isLoading = false;
-                          errorMessage = result.errorMessage ?? 'Invalid credentials';
-                        });
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D9FF),
-                foregroundColor: Colors.black,
-              ),
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : const Text('Enable'),
-            ),
-          ],
         ),
       ),
     );
+
+    // Clean up
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+    scrollController.dispose();
   }
 
   /// Show dialog to change auto login credentials
@@ -1185,192 +1234,241 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final emailController = TextEditingController(text: currentEmail);
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final scrollController = ScrollController();
+    final emailFocusNode = FocusNode();
+    final passwordFocusNode = FocusNode();
     bool isLoading = false;
     bool obscurePassword = true;
     String? errorMessage;
 
     if (!mounted) return;
 
+    // Helper to scroll to focused field
+    void scrollToFocused() {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (scrollController.hasClients) {
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+
+    emailFocusNode.addListener(() {
+      if (emailFocusNode.hasFocus) scrollToFocused();
+    });
+    passwordFocusNode.addListener(() {
+      if (passwordFocusNode.hasFocus) scrollToFocused();
+    });
+
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) => Dialog(
           backgroundColor: const Color(0xFF16213E),
-          title: const Row(
-            children: [
-              Icon(Icons.edit, color: Color(0xFF00D9FF)),
-              SizedBox(width: 12),
-              Text(
-                'Change Credentials',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: SizedBox(
-            width: 400,
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Enter new credentials for automatic login.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration(
-                      'Password',
-                      Icons.lock_outlined,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: Colors.white54,
-                        ),
-                        onPressed: () {
-                          setDialogState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF44336).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            color: Color(0xFFF44336),
-                            size: 20,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450, maxHeight: 500),
+            child: SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    const Row(
+                      children: [
+                        Icon(Icons.edit, color: Color(0xFF00D9FF)),
+                        SizedBox(width: 12),
+                        Text(
+                          'Change Credentials',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              errorMessage!,
-                              style: const TextStyle(
-                                color: Color(0xFFF44336),
-                                fontSize: 14,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Enter new credentials for automatic login.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: emailController,
+                      focusNode: emailFocusNode,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: passwordController,
+                      focusNode: passwordFocusNode,
+                      obscureText: obscurePassword,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration(
+                        'Password',
+                        Icons.lock_outlined,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.white54,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF44336).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Color(0xFFF44336),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: Color(0xFFF44336),
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 24),
+                    // Action buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+
+                                  setDialogState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                  });
+
+                                  // Test new credentials
+                                  final authService = AuthService.instance;
+                                  final result = await authService.signInWithEmailPassword(
+                                    email: emailController.text.trim(),
+                                    password: passwordController.text,
+                                    rememberMe: true,
+                                  );
+
+                                  if (result.isAuthenticated) {
+                                    // Update stored credentials
+                                    final apiClient = ApiClientService.instance;
+                                    await apiClient.storeCredentials(
+                                      emailController.text.trim(),
+                                      passwordController.text,
+                                    );
+
+                                    Navigator.of(context).pop();
+
+                                    // Refresh state
+                                    await _loadAutoLoginSettings();
+
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(this.context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Credentials updated successfully'),
+                                          backgroundColor: Color(0xFF4CAF50),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      errorMessage = result.errorMessage ?? 'Invalid credentials';
+                                    });
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00D9FF),
+                            foregroundColor: Colors.black,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-
-                      setDialogState(() {
-                        isLoading = true;
-                        errorMessage = null;
-                      });
-
-                      // Test new credentials
-                      final authService = AuthService.instance;
-                      final result = await authService.signInWithEmailPassword(
-                        email: emailController.text.trim(),
-                        password: passwordController.text,
-                        rememberMe: true,
-                      );
-
-                      if (result.isAuthenticated) {
-                        // Update stored credentials
-                        final apiClient = ApiClientService.instance;
-                        await apiClient.storeCredentials(
-                          emailController.text.trim(),
-                          passwordController.text,
-                        );
-
-                        Navigator.of(context).pop();
-
-                        // Refresh state
-                        await _loadAutoLoginSettings();
-
-                        if (mounted) {
-                          ScaffoldMessenger.of(this.context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Credentials updated successfully'),
-                              backgroundColor: Color(0xFF4CAF50),
-                            ),
-                          );
-                        }
-                      } else {
-                        setDialogState(() {
-                          isLoading = false;
-                          errorMessage = result.errorMessage ?? 'Invalid credentials';
-                        });
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D9FF),
-                foregroundColor: Colors.black,
-              ),
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : const Text('Save'),
-            ),
-          ],
         ),
       ),
     );
+
+    // Clean up
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+    scrollController.dispose();
   }
 
   /// Show dialog to disable auto login

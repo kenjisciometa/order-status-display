@@ -17,12 +17,6 @@ import 'services/auth_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Hide Android navigation bar and status bar for immersive mode
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.immersiveSticky,
-    overlays: [],
-  );
-
   // Load environment variables
   try {
     await dotenv.load(fileName: ".env");
@@ -234,6 +228,13 @@ class _InitialScreenState extends State<InitialScreen> {
   Future<void> _checkAuthStatus() async {
     // Use post frame callback to avoid calling Navigator during build
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Enable immersive mode after first frame is rendered
+      // This prevents the delayed logo display issue
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.immersiveSticky,
+        overlays: [],
+      );
+
       debugPrint('*** OSD MAIN: Initializing auth service...');
 
       final authService = AuthService.instance;
