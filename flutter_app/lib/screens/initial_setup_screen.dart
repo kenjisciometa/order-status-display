@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_icons.dart';
+import '../core/theme/app_layout.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
 import '../services/api_client_service.dart';
 import '../services/auth_service.dart';
 import 'display_selection_screen.dart';
@@ -103,21 +107,21 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(OsdLayout.setupBodyPadding),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(maxWidth: OsdLayout.setupMaxWidth),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Welcome header
                   _buildHeader(),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: OsdSpacing.space40),
 
                   // Step indicator
                   _buildStepIndicator(),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: OsdSpacing.space32),
 
                   // Main content based on step
                   _currentStep == 0 ? _buildWelcomeStep() : _buildCredentialsStep(),
@@ -135,7 +139,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
       children: [
         // Logo
         Container(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.all(OsdLayout.setupHeaderPadding),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -145,7 +149,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 Color(0xFF00D9FF),
               ],
             ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: OsdRadius.borderRadiusXxl,
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF00D9FF).withOpacity(0.3),
@@ -161,23 +165,23 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: OsdSpacing.space24),
 
         const Text(
           'Initial Setup',
           style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
+            fontSize: OsdTypography.fontSize32,
+            fontWeight: OsdTypography.weightBold,
             color: Colors.white,
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: OsdSpacing.space8),
 
         Text(
           'Configure auto-login for your display',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: OsdTypography.fontSize16,
             color: Colors.white.withOpacity(0.6),
           ),
         ),
@@ -201,34 +205,34 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
     return Column(
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: OsdLayout.setupStepDotSize,
+          height: OsdLayout.setupStepDotSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isActive ? const Color(0xFF00D9FF) : const Color(0xFF16213E),
             border: Border.all(
               color: isActive ? const Color(0xFF00D9FF) : Colors.white24,
-              width: 2,
+              width: OsdLayout.inputFocusBorderWidth,
             ),
           ),
           child: Center(
             child: isActive && _currentStep > step
-                ? const Icon(Icons.check, color: Colors.black, size: 24)
+                ? const Icon(Icons.check, color: Colors.black, size: OsdIconSizes.size24)
                 : Text(
                     '${step + 1}',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontSize: OsdTypography.fontSize18,
+                      fontWeight: OsdTypography.weightBold,
                       color: isActive ? Colors.black : Colors.white54,
                     ),
                   ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: OsdSpacing.space8),
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: OsdTypography.fontSize14,
             color: isActive ? const Color(0xFF00D9FF) : Colors.white54,
           ),
         ),
@@ -238,19 +242,19 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
 
   Widget _buildStepConnector() {
     return Container(
-      width: 60,
-      height: 2,
-      margin: const EdgeInsets.only(bottom: 24),
+      width: OsdLayout.setupStepConnectorWidth,
+      height: OsdSpacing.space2,
+      margin: const EdgeInsets.only(bottom: OsdSpacing.space24),
       color: _currentStep > 0 ? const Color(0xFF00D9FF) : Colors.white24,
     );
   }
 
   Widget _buildWelcomeStep() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(OsdSpacing.space24),
       decoration: BoxDecoration(
         color: const Color(0xFF16213E),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: Border.all(
           color: const Color(0xFF00D9FF).withOpacity(0.2),
         ),
@@ -263,42 +267,42 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               Icon(
                 Icons.info_outline,
                 color: Color(0xFF00D9FF),
-                size: 28,
+                size: OsdIconSizes.size28,
               ),
-              SizedBox(width: 12),
+              SizedBox(width: OsdSpacing.space12),
               Text(
                 'Welcome to Sciometa OSD',
                 style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontSize: OsdTypography.fontSize22,
+                  fontWeight: OsdTypography.weightBold,
                   color: Colors.white,
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: OsdSpacing.space20),
 
           Text(
             'This setup wizard will help you configure your Order Status Display for kiosk mode.',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: OsdTypography.fontSize16,
               color: Colors.white.withOpacity(0.8),
               height: 1.5,
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: OsdSpacing.space16),
 
           _buildFeatureItem(Icons.login, 'Auto-login on startup'),
           _buildFeatureItem(Icons.fullscreen, 'Fullscreen kiosk mode'),
           _buildFeatureItem(Icons.notifications_active, 'Real-time order updates'),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: OsdSpacing.space24),
 
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: OsdLayout.setupButtonHeight,
             child: ElevatedButton(
               onPressed: () {
                 setState(() {
@@ -309,7 +313,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 backgroundColor: const Color(0xFF00D9FF),
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: OsdRadius.borderRadiusMd,
                 ),
               ),
               child: const Row(
@@ -318,11 +322,11 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   Text(
                     'Get Started',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontSize: OsdTypography.fontSize18,
+                      fontWeight: OsdTypography.weightBold,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: OsdSpacing.space8),
                   Icon(Icons.arrow_forward),
                 ],
               ),
@@ -335,19 +339,19 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
 
   Widget _buildFeatureItem(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: OsdSpacing.space8),
       child: Row(
         children: [
           Icon(
             icon,
             color: const Color(0xFF4CAF50),
-            size: 24,
+            size: OsdIconSizes.size24,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: OsdSpacing.space12),
           Text(
             text,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: OsdTypography.fontSize16,
               color: Colors.white.withOpacity(0.9),
             ),
           ),
@@ -358,10 +362,10 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
 
   Widget _buildCredentialsStep() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(OsdSpacing.space24),
       decoration: BoxDecoration(
         color: const Color(0xFF16213E),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: Border.all(
           color: const Color(0xFF00D9FF).withOpacity(0.2),
         ),
@@ -376,31 +380,31 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 Icon(
                   Icons.person_outline,
                   color: Color(0xFF00D9FF),
-                  size: 28,
+                  size: OsdIconSizes.size28,
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: OsdSpacing.space12),
                 Text(
                   'Login Credentials',
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontSize: OsdTypography.fontSize22,
+                    fontWeight: OsdTypography.weightBold,
                     color: Colors.white,
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: OsdSpacing.space8),
 
             Text(
               'Enter your Sciometa account credentials. These will be securely stored for automatic login.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: OsdTypography.fontSize14,
                 color: Colors.white.withOpacity(0.6),
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: OsdSpacing.space24),
 
             // Email field
             TextFormField(
@@ -422,7 +426,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: OsdSpacing.space16),
 
             // Password field
             TextFormField(
@@ -456,12 +460,12 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
 
             // Error message
             if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: OsdSpacing.space16),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(OsdSpacing.space12),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF44336).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: OsdRadius.borderRadiusBase,
                   border: Border.all(
                     color: const Color(0xFFF44336).withOpacity(0.5),
                   ),
@@ -471,15 +475,15 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                     const Icon(
                       Icons.error_outline,
                       color: Color(0xFFF44336),
-                      size: 20,
+                      size: OsdIconSizes.size20,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: OsdSpacing.space8),
                     Expanded(
                       child: Text(
                         _errorMessage!,
                         style: const TextStyle(
                           color: Color(0xFFF44336),
-                          fontSize: 14,
+                          fontSize: OsdTypography.fontSize14,
                         ),
                       ),
                     ),
@@ -488,7 +492,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               ),
             ],
 
-            const SizedBox(height: 24),
+            const SizedBox(height: OsdSpacing.space24),
 
             // Buttons row
             Row(
@@ -512,23 +516,23 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
 
                 // Setup button
                 SizedBox(
-                  height: 50,
+                  height: OsdLayout.setupButtonHeight,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _handleSetup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00D9FF),
                       foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      padding: const EdgeInsets.symmetric(horizontal: OsdLayout.setupBodyPadding),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: OsdRadius.borderRadiusMd,
                       ),
                     ),
                     child: _isLoading
                         ? const SizedBox(
-                            width: 24,
-                            height: 24,
+                            width: OsdSpacing.space24,
+                            height: OsdSpacing.space24,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: OsdLayout.inputFocusBorderWidth,
                               color: Colors.black,
                             ),
                           )
@@ -538,11 +542,11 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                               Text(
                                 'Complete Setup',
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: OsdTypography.fontSize16,
+                                  fontWeight: OsdTypography.weightBold,
                                 ),
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: OsdSpacing.space8),
                               Icon(Icons.check),
                             ],
                           ),
@@ -551,28 +555,28 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: OsdSpacing.space16),
 
             // Security note
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(OsdSpacing.space12),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F3460).withOpacity(0.5),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: OsdRadius.borderRadiusBase,
               ),
               child: Row(
                 children: [
                   const Icon(
                     Icons.lock_outline,
                     color: Color(0xFF00D9FF),
-                    size: 20,
+                    size: OsdIconSizes.size20,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: OsdSpacing.space8),
                   Expanded(
                     child: Text(
                       'Your credentials are stored securely on this device and used only for automatic login.',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: OsdTypography.fontSize12,
                         color: Colors.white.withOpacity(0.6),
                       ),
                     ),
@@ -599,27 +603,27 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
       filled: true,
       fillColor: const Color(0xFF0F3460),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: const BorderSide(
           color: Color(0xFF00D9FF),
-          width: 2,
+          width: OsdLayout.inputFocusBorderWidth,
         ),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: const BorderSide(
           color: Color(0xFFF44336),
         ),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: const BorderSide(
           color: Color(0xFFF44336),
-          width: 2,
+          width: OsdLayout.inputFocusBorderWidth,
         ),
       ),
     );

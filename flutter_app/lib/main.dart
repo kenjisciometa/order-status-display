@@ -4,6 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:window_manager/window_manager.dart';
+import 'core/theme/app_spacing.dart';
+import 'core/theme/app_typography.dart';
+import 'core/theme/app_layout.dart';
 import 'screens/login_screen.dart';
 import 'screens/display_selection_screen.dart';
 import 'screens/order_status_screen.dart';
@@ -115,18 +118,18 @@ class OSDApp extends StatelessWidget {
         secondary: Color(0xFF00D9FF), // Cyan accent
         onSecondary: Colors.black,
       ),
-      cardTheme: const CardThemeData(
-        color: Color(0xFF16213E),
-        elevation: 4,
-        margin: EdgeInsets.all(8),
+      cardTheme: CardThemeData(
+        color: const Color(0xFF16213E),
+        elevation: OsdElevation.level4,
+        margin: const EdgeInsets.all(OsdSpacing.space8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
+          borderRadius: BorderRadius.all(Radius.circular(OsdRadius.lg)),
         ),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF0F3460),
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: OsdElevation.level0,
         iconTheme: IconThemeData(color: Colors.white),
         actionsIconTheme: IconThemeData(color: Colors.white),
       ),
@@ -134,9 +137,9 @@ class OSDApp extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF00D9FF),
           foregroundColor: Colors.black,
-          elevation: 2,
+          elevation: OsdElevation.level2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: OsdRadius.borderRadiusMd,
           ),
         ),
       ),
@@ -161,17 +164,17 @@ class OSDApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 4,
-        margin: const EdgeInsets.all(8),
+        elevation: OsdElevation.level4,
+        margin: const EdgeInsets.all(OsdSpacing.space8),
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          borderRadius: BorderRadius.all(Radius.circular(OsdRadius.lg)),
           side: BorderSide(color: Colors.grey.shade200),
         ),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF2196F3),
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: OsdElevation.level0,
         iconTheme: IconThemeData(color: Colors.white),
         actionsIconTheme: IconThemeData(color: Colors.white),
       ),
@@ -179,9 +182,9 @@ class OSDApp extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF2196F3),
           foregroundColor: Colors.white,
-          elevation: 2,
+          elevation: OsdElevation.level2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: OsdRadius.borderRadiusMd,
           ),
         ),
       ),
@@ -346,41 +349,41 @@ class _InitialScreenState extends State<InitialScreen> {
             // App Icon
             Image.asset(
               'assets/icons/app_icon.png',
-              width: 120,
-              height: 120,
+              width: OsdLayout.splashIconSize,
+              height: OsdLayout.splashIconSize,
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: OsdSpacing.space32),
 
             // App Name
             const Text(
               'Sciometa OSD',
               style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
+                fontSize: OsdTypography.fontSize32,
+                fontWeight: OsdTypography.weightBold,
                 color: Color(0xFF111827),
                 letterSpacing: -0.5,
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: OsdSpacing.space8),
 
             const Text(
               'Order Status Display',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: OsdTypography.fontSize16,
                 color: Color(0xFF6B7280),
               ),
             ),
 
-            const SizedBox(height: 48),
+            const SizedBox(height: OsdSpacing.space48),
 
             // Loading indicator
             const SizedBox(
-              width: 40,
-              height: 40,
+              width: OsdLayout.splashProgressSize,
+              height: OsdLayout.splashProgressSize,
               child: CircularProgressIndicator(
-                strokeWidth: 3,
+                strokeWidth: OsdLayout.splashProgressStrokeWidth,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   Color(0xFF2196F3),
                 ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,6 +58,7 @@ class ApiClientService {
   late final Dio _dio;
   SharedPreferences? _prefs;
   String? _deviceId;
+  Completer<bool>? _refreshCompleter;
 
   /// Singleton instance
   static ApiClientService? _instance;
@@ -198,10 +201,17 @@ class ApiClientService {
 
   /// Refresh authentication token
   Future<bool> refreshAuthToken() async {
+    if (_refreshCompleter != null) {
+      debugPrint('🔒 [OSD API CLIENT] Token refresh already in progress, waiting...');
+      return _refreshCompleter!.future;
+    }
+    _refreshCompleter = Completer<bool>();
+
     try {
       final refreshToken = await getRefreshToken();
       if (refreshToken == null) {
         debugPrint('⚠️ [OSD API CLIENT] No refresh token available');
+        _refreshCompleter!.complete(false);
         return false;
       }
 
@@ -219,16 +229,29 @@ class ApiClientService {
         if (newToken != null) {
           await setAuthToken(newToken, newRefreshToken);
           debugPrint('✅ [OSD API CLIENT] Successfully refreshed auth token');
+          _refreshCompleter!.complete(true);
           return true;
         }
       }
 
       debugPrint(
           '❌ [OSD API CLIENT] Token refresh failed: ${response.statusCode}');
+      await clearAuthData();
+      _refreshCompleter!.complete(false);
+      return false;
+    } on DioException catch (e) {
+      debugPrint('❌ [OSD API CLIENT] Token refresh error: $e');
+      if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
+        await clearAuthData();
+      }
+      _refreshCompleter!.complete(false);
       return false;
     } catch (e) {
       debugPrint('❌ [OSD API CLIENT] Token refresh error: $e');
+      _refreshCompleter!.complete(false);
       return false;
+    } finally {
+      _refreshCompleter = null;
     }
   }
 

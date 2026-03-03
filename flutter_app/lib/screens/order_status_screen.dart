@@ -7,6 +7,10 @@ import '../services/osd_order_service.dart';
 import '../services/settings_service.dart';
 import '../services/audio_service.dart';
 import '../widgets/order_card.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
+import '../core/theme/app_layout.dart';
+import '../core/theme/app_icons.dart';
 import 'settings_screen.dart';
 
 /// Order Status Screen
@@ -45,7 +49,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   // Kiosk mode: Auto-hide mouse cursor
   bool _showCursor = true;
   Timer? _cursorHideTimer;
-  static const _cursorHideDelay = Duration(seconds: 3);
+  static const _cursorHideDelay = OsdDurations.cursorHide;
 
   @override
   void initState() {
@@ -436,15 +440,15 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
             // Connection indicator (top-right corner)
             Positioned(
-              top: 8,
-              right: 8,
+              top: OsdSpacing.space8,
+              right: OsdSpacing.space8,
               child: _buildConnectionIndicator(isDarkMode),
             ),
 
             // Settings button (top-left corner)
             Positioned(
-              top: 8,
-              left: 8,
+              top: OsdSpacing.space8,
+              left: OsdSpacing.space8,
               child: _buildSettingsButton(isDarkMode),
             ),
           ],
@@ -461,35 +465,35 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         _showConnectionDetails();
       },
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(OsdSpacing.space8),
         decoration: BoxDecoration(
           color: (isDarkMode ? Colors.black : Colors.white).withOpacity(0.3),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: OsdRadius.borderRadiusXl,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Connection dot
             Container(
-              width: 12,
-              height: 12,
+              width: OsdLayout.connectionDotSize,
+              height: OsdLayout.connectionDotSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _isConnected ? Colors.green : Colors.red,
                 boxShadow: [
                   BoxShadow(
                     color: (_isConnected ? Colors.green : Colors.red).withOpacity(0.5),
-                    blurRadius: 6,
-                    spreadRadius: 2,
+                    blurRadius: OsdSpacing.space6,
+                    spreadRadius: OsdSpacing.space2,
                   ),
                 ],
               ),
             ),
             if (_errorMessage != null) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: OsdSpacing.space6),
               Icon(
                 Icons.warning_amber_rounded,
-                size: 16,
+                size: OsdIconSizes.size16,
                 color: Colors.orange,
               ),
             ],
@@ -504,14 +508,14 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
     return GestureDetector(
       onTap: _openSettings,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(OsdSpacing.space8),
         decoration: BoxDecoration(
           color: (isDarkMode ? Colors.black : Colors.white).withOpacity(0.3),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: OsdRadius.borderRadiusXl,
         ),
         child: Icon(
           Icons.settings,
-          size: 20,
+          size: OsdIconSizes.size20,
           color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7),
         ),
       ),
@@ -530,14 +534,14 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         title: Row(
           children: [
             Container(
-              width: 12,
-              height: 12,
+              width: OsdLayout.connectionDotSize,
+              height: OsdLayout.connectionDotSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _isConnected ? Colors.green : Colors.red,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: OsdSpacing.space8),
             Text(
               _isConnected ? 'Connected' : 'Disconnected',
               style: const TextStyle(
@@ -555,23 +559,23 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                 'Error: $_errorMessage',
                 style: const TextStyle(
                   color: Colors.red,
-                  fontSize: 14,
+                  fontSize: OsdTypography.fontSize14,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: OsdSpacing.space8),
             ],
             Text(
               'Now Cooking: ${_nowCookingOrders.length}',
               style: const TextStyle(
                 color: Colors.black87,
-                fontSize: 14,
+                fontSize: OsdTypography.fontSize14,
               ),
             ),
             Text(
               'Ready: ${_readyOrders.length}',
               style: const TextStyle(
                 color: Colors.black87,
-                fontSize: 14,
+                fontSize: OsdTypography.fontSize14,
               ),
             ),
           ],
@@ -620,7 +624,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
         // Divider
         Container(
-          width: 2,
+          width: OsdLayout.columnDividerWidth,
           color: isDarkMode
               ? const Color(0xFF00D9FF).withOpacity(0.3)
               : const Color(0xFF2196F3).withOpacity(0.3),
@@ -661,7 +665,10 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
         children: [
           // Header - Compact with title and count side by side
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            padding: const EdgeInsets.symmetric(
+              vertical: OsdLayout.headerPaddingV,
+              horizontal: OsdLayout.headerPaddingH,
+            ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -679,25 +686,27 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
+                    fontSize: OsdTypography.fontSize48,
+                    fontWeight: OsdTypography.weightBold,
                     color: textColor,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: OsdSpacing.space12),
                 // Count badge
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: OsdSpacing.space14,
+                    vertical: OsdSpacing.space6,
+                  ),
                   decoration: BoxDecoration(
                     color: accentColor,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: OsdRadius.borderRadiusLg,
                   ),
                   child: Text(
                     '${orders.length}',
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontSize: OsdTypography.fontSize20,
+                      fontWeight: OsdTypography.weightBold,
                       color: Colors.white,
                     ),
                   ),
@@ -715,19 +724,19 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                       children: [
                         Icon(
                           isReady ? Icons.check_circle_outline : Icons.restaurant,
-                          size: 144,
+                          size: OsdLayout.emptyStateIconLarge,
                           color: textColor.withOpacity(0.3),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: OsdSpacing.space24),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space16),
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
                               emptyMessage,
                               style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.w500,
+                                fontSize: OsdTypography.fontSize48,
+                                fontWeight: OsdTypography.weightMedium,
                                 color: textColor.withOpacity(0.5),
                               ),
                               maxLines: 1,
@@ -740,13 +749,13 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                 : isReady
                     ? _buildReadyColumnContent(orders, isDarkMode, showElapsedTime)
                     : GridView.builder(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(OsdLayout.gridPadding),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 2.0, // Width is 2x height (half height cards)
-                          crossAxisSpacing: 6,
-                          mainAxisSpacing: 6,
+                          crossAxisCount: OsdLayout.gridColumns,
+                          childAspectRatio: OsdLayout.cardAspectRatio,
+                          crossAxisSpacing: OsdLayout.gridSpacing,
+                          mainAxisSpacing: OsdLayout.gridSpacing,
                         ),
                         itemCount: orders.length,
                         itemBuilder: (context, index) {
@@ -792,12 +801,12 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
     // If no highlighted orders, show normal grid
     if (highlightedOrders.isEmpty) {
       return GridView.builder(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(OsdLayout.gridPadding),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          childAspectRatio: 2.0,
-          crossAxisSpacing: 6,
-          mainAxisSpacing: 6,
+          crossAxisCount: OsdLayout.gridColumns,
+          childAspectRatio: OsdLayout.cardAspectRatio,
+          crossAxisSpacing: OsdLayout.gridSpacing,
+          mainAxisSpacing: OsdLayout.gridSpacing,
         ),
         itemCount: orders.length,
         itemBuilder: (context, index) {
@@ -814,7 +823,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
     // Show highlighted orders prominently at the top
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(OsdLayout.gridPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -824,9 +833,9 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
           // Divider if there are normal orders
           if (normalOrders.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: OsdSpacing.space12),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space8),
               child: Row(
                 children: [
                   Expanded(
@@ -838,11 +847,11 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space12),
                     child: Text(
                       'Earlier',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: OsdTypography.fontSize12,
                         color: isDarkMode
                             ? Colors.white.withOpacity(0.5)
                             : Colors.black.withOpacity(0.5),
@@ -860,7 +869,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: OsdSpacing.space8),
           ],
 
           // Normal orders - Smaller grid
@@ -869,10 +878,10 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 2.0,
-                crossAxisSpacing: 6,
-                mainAxisSpacing: 6,
+                crossAxisCount: OsdLayout.gridColumns,
+                childAspectRatio: OsdLayout.cardAspectRatio,
+                crossAxisSpacing: OsdLayout.gridSpacing,
+                mainAxisSpacing: OsdLayout.gridSpacing,
               ),
               itemCount: normalOrders.length,
               itemBuilder: (context, index) {
@@ -910,7 +919,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
       rows.add(
         Padding(
-          padding: EdgeInsets.only(bottom: i + ordersPerRow < highlightedOrders.length ? 8 : 0),
+          padding: EdgeInsets.only(bottom: i + ordersPerRow < highlightedOrders.length ? OsdSpacing.space8 : 0),
           child: Row(
             children: [
               // Actual order cards
@@ -920,11 +929,13 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                 return Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(
-                      left: index == 0 ? 0 : 4,
-                      right: index == actualItemsInRow - 1 && actualItemsInRow == ordersPerRow ? 0 : 4,
+                      left: index == 0 ? 0 : OsdSpacing.space4,
+                      right: index == actualItemsInRow - 1 && actualItemsInRow == ordersPerRow ? 0 : OsdSpacing.space4,
                     ),
                     child: AspectRatio(
-                      aspectRatio: highlightedOrders.length == 1 ? 2.5 : 1.5, // Taller for highlighted
+                      aspectRatio: highlightedOrders.length == 1
+                          ? OsdLayout.highlightedCardAspectRatioSingle
+                          : OsdLayout.highlightedCardAspectRatioMultiple,
                       child: OrderCard(
                         order: order,
                         isReady: true,

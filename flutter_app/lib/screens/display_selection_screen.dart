@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_icons.dart';
+import '../core/theme/app_layout.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
 import '../services/auth_service.dart';
 import '../models/display_preset.dart';
 import 'order_status_screen.dart';
@@ -85,7 +89,7 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
         title: const Text('Select Display'),
         backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
-        elevation: 2,
+        elevation: OsdElevation.level2,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -114,34 +118,34 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(OsdSpacing.space32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.monitor_outlined,
-              size: 80,
+              size: OsdLayout.emptyStateIconSmall,
               color: Colors.grey.shade400,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: OsdSpacing.space24),
             const Text(
               'No Displays Available',
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+                fontSize: OsdTypography.fontSize20,
+                fontWeight: OsdTypography.weightSemibold,
                 color: Color(0xFF1A1A2E),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: OsdSpacing.space8),
             Text(
               'No OSD displays are configured for your organization.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: OsdTypography.fontSize14,
                 color: Colors.grey.shade600,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: OsdSpacing.space24),
             ElevatedButton.icon(
               onPressed: _fetchDisplays,
               icon: const Icon(Icons.refresh),
@@ -164,43 +168,43 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
         // Header
         SliverToBoxAdapter(
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(OsdSpacing.space20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Select a Display',
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
+                    fontSize: OsdTypography.fontSize24,
+                    fontWeight: OsdTypography.weightBold,
                     color: Color(0xFF1A1A2E),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: OsdSpacing.space4),
                 Text(
                   'Choose the order status display for this device',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: OsdTypography.fontSize14,
                     color: Colors.grey.shade600,
                   ),
                 ),
                 if (user != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: OsdSpacing.space8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                      horizontal: OsdSpacing.space12,
+                      vertical: OsdSpacing.space6,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2196F3).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: OsdRadius.borderRadiusXl,
                     ),
                     child: Text(
                       'Logged in as ${user.email}',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: OsdTypography.fontSize12,
                         color: Color(0xFF2196F3),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: OsdTypography.weightMedium,
                       ),
                     ),
                   ),
@@ -212,7 +216,7 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
 
         // Display list grouped by store
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space16),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
@@ -224,37 +228,37 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
                   children: [
                     // Store name header
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: OsdSpacing.space12),
                       child: Row(
                         children: [
                           Icon(
                             Icons.store,
-                            size: 20,
+                            size: OsdIconSizes.size20,
                             color: Colors.grey.shade600,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: OsdSpacing.space8),
                           Text(
                             storeName,
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: OsdTypography.fontSize16,
+                              fontWeight: OsdTypography.weightSemibold,
                               color: Color(0xFF1A1A2E),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: OsdSpacing.space8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
+                              horizontal: OsdSpacing.space8,
+                              vertical: OsdSpacing.space2,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: OsdRadius.borderRadiusMd,
                             ),
                             child: Text(
                               '${storeDisplays.length}',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: OsdTypography.fontSize12,
                                 color: Colors.grey.shade600,
                               ),
                             ),
@@ -266,7 +270,7 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
                     // Display cards for this store
                     ...storeDisplays.map((display) => _buildDisplayCard(display)),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: OsdSpacing.space8),
                   ],
                 );
               },
@@ -277,7 +281,7 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
 
         // Bottom padding
         const SliverToBoxAdapter(
-          child: SizedBox(height: 24),
+          child: SizedBox(height: OsdSpacing.space24),
         ),
       ],
     );
@@ -285,35 +289,35 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
 
   Widget _buildDisplayCard(DisplayPreset display) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      margin: const EdgeInsets.only(bottom: OsdSpacing.space12),
+      elevation: OsdElevation.level2,
       color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
       ),
       child: InkWell(
         onTap: () => _selectDisplay(display),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(OsdSpacing.space16),
           child: Row(
             children: [
               // Display icon
               Container(
-                width: 56,
-                height: 56,
+                width: OsdLayout.displayIconContainerSize,
+                height: OsdLayout.displayIconContainerSize,
                 decoration: BoxDecoration(
                   color: const Color(0xFF2196F3),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: OsdRadius.borderRadiusMd,
                 ),
                 child: const Icon(
                   Icons.monitor,
                   color: Colors.white,
-                  size: 28,
+                  size: OsdIconSizes.size28,
                 ),
               ),
 
-              const SizedBox(width: 16),
+              const SizedBox(width: OsdSpacing.space16),
 
               // Display info
               Expanded(
@@ -327,30 +331,30 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
                           child: Text(
                             display.name,
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: OsdTypography.fontSize16,
+                              fontWeight: OsdTypography.weightSemibold,
                               color: Color(0xFF1A1A2E),
                             ),
                           ),
                         ),
                         if (display.isDefault) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: OsdSpacing.space8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
+                              horizontal: OsdSpacing.space8,
+                              vertical: OsdSpacing.space2,
                             ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF2196F3),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: OsdRadius.borderRadiusSm,
                             ),
                             child: const Text(
                               'DEFAULT',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: OsdTypography.fontSize10,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
+                                fontWeight: OsdTypography.weightSemibold,
+                                letterSpacing: OsdTypography.letterSpacing05,
                               ),
                             ),
                           ),
@@ -358,22 +362,22 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: OsdSpacing.space4),
 
                     // Categories
                     Row(
                       children: [
                         Icon(
                           Icons.category_outlined,
-                          size: 14,
+                          size: OsdIconSizes.size14,
                           color: Colors.grey.shade500,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: OsdSpacing.space4),
                         Expanded(
                           child: Text(
                             display.categoryNames,
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: OsdTypography.fontSize13,
                               color: Colors.grey.shade600,
                             ),
                             maxLines: 1,
@@ -386,26 +390,26 @@ class _DisplaySelectionScreenState extends State<DisplaySelectionScreen> {
                     // Category chips (if not too many)
                     if (display.categories.isNotEmpty &&
                         display.categories.length <= 4) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: OsdSpacing.space8),
                       Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
+                        spacing: OsdSpacing.space6,
+                        runSpacing: OsdSpacing.space4,
                         children: display.categories.map((category) {
                           return Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: OsdSpacing.space8,
+                              vertical: OsdSpacing.space4,
                             ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF2196F3).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: OsdRadius.borderRadiusXs,
                             ),
                             child: Text(
                               category.name,
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: OsdTypography.fontSize11,
                                 color: Color(0xFF2196F3),
-                                fontWeight: FontWeight.w500,
+                                fontWeight: OsdTypography.weightMedium,
                               ),
                             ),
                           );
