@@ -30,6 +30,7 @@ class AuthService extends ChangeNotifier {
   User? _currentUser;
   List<DisplayPreset> _availableDisplays = [];
   DisplayPreset? _selectedDisplay;
+  bool _isLoginInProgress = false;
 
   /// Current authentication state
   AuthState get currentState => _currentState;
@@ -51,41 +52,67 @@ class AuthService extends ChangeNotifier {
   }
 
   /// Initialize the auth service
-  /// Check for stored credentials and auto-login if enabled
+  /// Check for stored credentials and auto-login if enabled, then fall back to token-based recovery
   Future<void> initialize() async {
     try {
       await _apiClient.initialize();
 
-      // Check if auto-login is enabled
+      // 1. Check if auto-login is enabled and has stored credentials
       final autoLoginEnabled = await _apiClient.isAutoLoginEnabled();
-      if (!autoLoginEnabled) {
-        debugPrint('🔐 [OSD AUTH] Auto-login disabled, showing login screen');
-        _updateState(const AuthState.unauthenticated());
-        return;
+      if (autoLoginEnabled) {
+        final email = await _apiClient.getStoredEmail();
+        final password = await _apiClient.getStoredPassword();
+
+        if (email != null && password != null) {
+          debugPrint(
+              '🔐 [OSD AUTH] Auto-login enabled, attempting login with stored credentials');
+          final result = await signInWithEmailPassword(
+            email: email,
+            password: password,
+            autoLogin: true,
+          );
+          if (result.isAuthenticated) {
+            debugPrint('✅ [OSD AUTH] Auto-login successful');
+            return;
+          }
+          debugPrint(
+              '⚠️ [OSD AUTH] Auto-login with stored credentials failed');
+        }
       }
 
-      // Check for stored credentials
-      final email = await _apiClient.getStoredEmail();
-      final password = await _apiClient.getStoredPassword();
+      // 2. Fall back to token-based recovery
+      final token = await _apiClient.getAuthToken();
+      final refreshToken = await _apiClient.getRefreshToken();
 
-      if (email != null && password != null) {
+      if (token != null) {
+        debugPrint('🔐 [OSD AUTH] Found stored token, validating...');
+        final isValid = await _validateToken();
+        if (isValid) {
+          debugPrint('✅ [OSD AUTH] Token valid, session restored');
+          return;
+        }
+        debugPrint('⚠️ [OSD AUTH] Token invalid or expired');
+      }
+
+      // 3. Access token invalid/missing but refresh_token exists - try refresh
+      if (refreshToken != null) {
         debugPrint(
-            '🔐 [OSD AUTH] Found stored credentials, attempting auto-login');
-        await signInWithEmailPassword(
-            email: email, password: password, autoLogin: true);
-      } else {
-        // Check for existing token
-        final token = await _apiClient.getAuthToken();
-        if (token != null) {
-          debugPrint('🔐 [OSD AUTH] Found stored token, validating...');
+            '🔄 [OSD AUTH] Attempting session restore via refresh token...');
+        final refreshed = await _apiClient.refreshAuthToken();
+        if (refreshed) {
           final isValid = await _validateToken();
           if (isValid) {
-            debugPrint('✅ [OSD AUTH] Token valid, session restored');
+            debugPrint(
+                '✅ [OSD AUTH] Session restored via refresh token');
             return;
           }
         }
-        _updateState(const AuthState.unauthenticated());
+        debugPrint('❌ [OSD AUTH] Refresh token invalid or expired');
       }
+
+      // 4. All recovery failed - clear and show login
+      await _apiClient.clearAuthData();
+      _updateState(const AuthState.unauthenticated());
     } catch (e) {
       debugPrint('❌ [OSD AUTH] Initialization error: $e');
       _updateState(const AuthState.unauthenticated());
@@ -120,6 +147,12 @@ class AuthService extends ChangeNotifier {
     bool rememberMe = false,
     bool autoLogin = false,
   }) async {
+    if (_isLoginInProgress) {
+      debugPrint('⚠️ [OSD AUTH] Login already in progress, ignoring duplicate request');
+      return _currentState;
+    }
+    _isLoginInProgress = true;
+
     try {
       if (!autoLogin) {
         _updateState(const AuthState.loading());
@@ -214,6 +247,8 @@ class AuthService extends ChangeNotifier {
       final authState = AuthState.unauthenticated(errorMessage);
       _updateState(authState);
       return authState;
+    } finally {
+      _isLoginInProgress = false;
     }
   }
 

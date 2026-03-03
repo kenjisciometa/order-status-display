@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/osd_order.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
+import '../core/theme/app_layout.dart';
 
 /// Order Card Widget
 ///
@@ -40,11 +43,14 @@ class _OrderCardState extends State<OrderCard>
 
     // Setup pulse animation (for highlighted/recently ready orders)
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: OsdDurations.pulse,
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+    _pulseAnimation = Tween<double>(
+      begin: OsdAnimations.pulseScaleStart,
+      end: OsdAnimations.pulseScaleEnd,
+    ).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
@@ -54,7 +60,7 @@ class _OrderCardState extends State<OrderCard>
     }
 
     // Update timer for elapsed time display
-    _updateTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _updateTimer = Timer.periodic(OsdDurations.cardUpdateInterval, (_) {
       if (mounted) {
         setState(() {});
       }
@@ -115,7 +121,9 @@ class _OrderCardState extends State<OrderCard>
         : widget.isReady
             ? const Color(0xFF4CAF50)
             : orangeColor.withOpacity(isDarkMode ? 0.7 : 0.8);
-    final borderWidth = isHighlighted ? 3.0 : 2.0;
+    final borderWidth = isHighlighted
+        ? OsdLayout.cardHighlightedBorderWidth
+        : OsdLayout.cardBorderWidth;
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
@@ -126,8 +134,8 @@ class _OrderCardState extends State<OrderCard>
           scale: scale,
           child: Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isHighlighted ? 16 : 12,
-              vertical: isHighlighted ? 12 : 6,
+              horizontal: isHighlighted ? OsdLayout.cardHighlightedPaddingH : OsdLayout.cardPaddingH,
+              vertical: isHighlighted ? OsdLayout.cardHighlightedPaddingV : OsdLayout.cardPaddingV,
             ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -135,7 +143,9 @@ class _OrderCardState extends State<OrderCard>
                 end: Alignment.bottomRight,
                 colors: gradientColors,
               ),
-              borderRadius: BorderRadius.circular(isHighlighted ? 16 : 12),
+              borderRadius: BorderRadius.circular(
+                isHighlighted ? OsdRadius.lg : OsdRadius.md,
+              ),
               border: Border.all(
                 color: borderColor,
                 width: borderWidth,
@@ -173,13 +183,13 @@ class _OrderCardState extends State<OrderCard>
           child: FittedBox(
             fit: BoxFit.contain,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space8),
               child: Text(
                 order.displayNumber,
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: OsdTypography.weightBold,
                   color: textColor,
-                  letterSpacing: 2,
+                  letterSpacing: OsdTypography.letterSpacing2,
                 ),
               ),
             ),
@@ -187,18 +197,21 @@ class _OrderCardState extends State<OrderCard>
         ),
         // "Ready!" label at bottom
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: OsdSpacing.space12,
+            vertical: OsdSpacing.space4,
+          ),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: OsdRadius.borderRadiusMd,
           ),
           child: Text(
             'READY!',
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+              fontSize: OsdTypography.fontSize14,
+              fontWeight: OsdTypography.weightBold,
               color: textColor,
-              letterSpacing: 1,
+              letterSpacing: OsdTypography.letterSpacing1,
             ),
           ),
         ),
@@ -217,10 +230,10 @@ class _OrderCardState extends State<OrderCard>
           child: Text(
             order.displayNumber,
             style: TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
+              fontSize: OsdTypography.fontSize48,
+              fontWeight: OsdTypography.weightBold,
               color: textColor,
-              letterSpacing: 1,
+              letterSpacing: OsdTypography.letterSpacing1,
             ),
           ),
         ),
@@ -233,26 +246,26 @@ class _OrderCardState extends State<OrderCard>
       children: [
         // Call Number (main display) - Auto-scaled, takes most space
         Expanded(
-          flex: 3,
+          flex: OsdLayout.cardCallNumberFlex,
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               order.displayNumber,
               style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
+                fontSize: OsdTypography.fontSize48,
+                fontWeight: OsdTypography.weightBold,
                 color: textColor,
-                letterSpacing: 1,
+                letterSpacing: OsdTypography.letterSpacing1,
               ),
             ),
           ),
         ),
 
-        const SizedBox(width: 8),
+        const SizedBox(width: OsdSpacing.space8),
 
         // Right side info: elapsed time and dining option
         Expanded(
-          flex: 2,
+          flex: OsdLayout.cardElapsedTimeFlex,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -262,19 +275,21 @@ class _OrderCardState extends State<OrderCard>
                 fit: BoxFit.scaleDown,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 2),
+                    horizontal: OsdSpacing.space8,
+                    vertical: OsdSpacing.space2,
+                  ),
                   decoration: BoxDecoration(
                     color: priorityColor.withOpacity(isDarkMode ? 0.3 : 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: OsdRadius.borderRadiusBase,
                   ),
                   child: Text(
                     _formatElapsedTime(widget.isReady
                         ? order.elapsedSinceReady
                         : order.elapsedTime),
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: OsdTypography.fontSize12,
                       color: priorityColor,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: OsdTypography.weightMedium,
                     ),
                   ),
                 ),

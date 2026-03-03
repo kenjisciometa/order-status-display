@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../core/theme/app_icons.dart';
+import '../core/theme/app_layout.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
 import '../services/settings_service.dart';
 
 /// Connection Status Bar Widget
@@ -25,14 +29,14 @@ class ConnectionStatusBar extends StatelessWidget {
     final isDarkMode = settingsService.isDarkMode;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space16, vertical: OsdSpacing.space8),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF0D1117) : const Color(0xFFF5F5F5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            blurRadius: OsdSpacing.space4,
+            offset: const Offset(OsdSpacing.space0, OsdSpacing.space2),
           ),
         ],
       ),
@@ -63,10 +67,10 @@ class ConnectionStatusBar extends StatelessWidget {
   Widget _buildConnectionIndicator(bool isDarkMode) {
     if (errorMessage != null) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space12, vertical: OsdSpacing.space6),
         decoration: BoxDecoration(
           color: const Color(0xFFF44336).withOpacity(0.2),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: OsdRadius.borderRadiusLg,
           border: Border.all(
             color: const Color(0xFFF44336).withOpacity(0.5),
           ),
@@ -77,14 +81,14 @@ class ConnectionStatusBar extends StatelessWidget {
             const Icon(
               Icons.error_outline,
               color: Color(0xFFF44336),
-              size: 16,
+              size: OsdIconSizes.size16,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: OsdSpacing.space6),
             Text(
               errorMessage!,
               style: const TextStyle(
                 color: Color(0xFFF44336),
-                fontSize: 12,
+                fontSize: OsdTypography.fontSize12,
               ),
             ),
           ],
@@ -93,12 +97,12 @@ class ConnectionStatusBar extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space12, vertical: OsdSpacing.space6),
       decoration: BoxDecoration(
         color: isConnected
             ? const Color(0xFF4CAF50).withOpacity(0.2)
             : const Color(0xFFFF9800).withOpacity(0.2),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: Border.all(
           color: isConnected
               ? const Color(0xFF4CAF50).withOpacity(0.5)
@@ -109,8 +113,8 @@ class ConnectionStatusBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: OsdLayout.connectionBarDotSize,
+            height: OsdLayout.connectionBarDotSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isConnected
@@ -118,14 +122,14 @@ class ConnectionStatusBar extends StatelessWidget {
                   : const Color(0xFFFF9800),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: OsdSpacing.space6),
           Text(
             isConnected ? 'Connected' : 'Reconnecting...',
             style: TextStyle(
               color: isConnected
                   ? const Color(0xFF4CAF50)
                   : const Color(0xFFFF9800),
-              fontSize: 12,
+              fontSize: OsdTypography.fontSize12,
               fontWeight: FontWeight.w500,
             ),
           ),
