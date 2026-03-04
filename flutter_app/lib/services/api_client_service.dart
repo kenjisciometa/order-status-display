@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -59,6 +60,12 @@ class ApiClientService {
   SharedPreferences? _prefs;
   String? _deviceId;
   Completer<bool>? _refreshCompleter;
+
+  /// 連続リフレッシュ失敗回数（P3）
+  int _consecutiveRefreshFailures = 0;
+  static const int _maxConsecutiveRefreshFailures = 3;
+
+  VoidCallback? onSessionExpired;
 
   /// Singleton instance
   static ApiClientService? _instance;
@@ -144,6 +151,62 @@ class ApiClientService {
     final prefs = await _getPrefs();
     await prefs.remove(_tokenKey);
     await prefs.remove(_refreshTokenKey);
+    _consecutiveRefreshFailures = 0;
+  }
+
+  /// セッション期限切れ処理: トークン削除 + UI 通知（P6）
+  Future<void> handleSessionExpired() async {
+    debugPrint('🔒 [OSD API CLIENT] Session expired, clearing auth and notifying app');
+    await clearAuthData();
+    onSessionExpired?.call();
+  }
+
+  // ===================
+  // Token Expiry Helpers
+  // ===================
+
+  /// JWT ペイロードをデコード
+  Map<String, dynamic>? _decodeToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      return jsonDecode(decoded) as Map<String, dynamic>;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// トークンが期限切れかチェック
+  Future<bool> isTokenExpired() async {
+    final token = await getAuthToken();
+    if (token == null || token.isEmpty) return true;
+    try {
+      final payload = _decodeToken(token);
+      if (payload == null || payload['exp'] is! int) return true;
+      final expiry = DateTime.fromMillisecondsSinceEpoch(
+          (payload['exp'] as int) * 1000);
+      return DateTime.now().isAfter(expiry);
+    } catch (e) {
+      return true;
+    }
+  }
+
+  /// トークンが5分以内に期限切れになるかチェック
+  Future<bool> isTokenExpiringSoon() async {
+    final token = await getAuthToken();
+    if (token == null || token.isEmpty) return true;
+    try {
+      final payload = _decodeToken(token);
+      if (payload == null || payload['exp'] is! int) return true;
+      final expiry = DateTime.fromMillisecondsSinceEpoch(
+          (payload['exp'] as int) * 1000);
+      return expiry.difference(DateTime.now()).inMinutes <= 5;
+    } catch (e) {
+      return true;
+    }
   }
 
   // ===================
@@ -200,20 +263,34 @@ class ApiClientService {
   // ===================
 
   /// Refresh authentication token
+  /// Completer で同時呼び出しを1つに集約（P1: 既存）
+  /// 連続失敗カウンターで無限リトライを防止（P3: 追加）
   Future<bool> refreshAuthToken() async {
     if (_refreshCompleter != null) {
       debugPrint('🔒 [OSD API CLIENT] Token refresh already in progress, waiting...');
       return _refreshCompleter!.future;
     }
+
+    // P3: 連続失敗の上限チェック
+    if (_consecutiveRefreshFailures >= _maxConsecutiveRefreshFailures) {
+      debugPrint(
+          '❌ [OSD API CLIENT] Max consecutive refresh failures reached, clearing tokens');
+      await clearAuthData();
+      return false;
+    }
+
     _refreshCompleter = Completer<bool>();
 
     try {
       final refreshToken = await getRefreshToken();
       if (refreshToken == null) {
         debugPrint('⚠️ [OSD API CLIENT] No refresh token available');
+        _consecutiveRefreshFailures++;
         _refreshCompleter!.complete(false);
         return false;
       }
+
+      debugPrint('🔄 [OSD API CLIENT] Attempting token refresh...');
 
       final response = await _dio.post(
         ApiEndpoints.refreshToken,
@@ -223,12 +300,17 @@ class ApiClientService {
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data as Map<String, dynamic>;
         final sessionData = data['session'] as Map<String, dynamic>?;
-        final newToken = sessionData?['access_token'] as String?;
-        final newRefreshToken = sessionData?['refresh_token'] as String?;
+        final newToken = sessionData?['access_token'] as String? ??
+            data['access_token'] as String? ??
+            data['accessToken'] as String?;
+        final newRefreshToken = sessionData?['refresh_token'] as String? ??
+            data['refresh_token'] as String? ??
+            data['refreshToken'] as String?;
 
         if (newToken != null) {
           await setAuthToken(newToken, newRefreshToken);
           debugPrint('✅ [OSD API CLIENT] Successfully refreshed auth token');
+          _consecutiveRefreshFailures = 0; // P3: 成功でリセット
           _refreshCompleter!.complete(true);
           return true;
         }
@@ -237,6 +319,7 @@ class ApiClientService {
       debugPrint(
           '❌ [OSD API CLIENT] Token refresh failed: ${response.statusCode}');
       await clearAuthData();
+      _consecutiveRefreshFailures++;
       _refreshCompleter!.complete(false);
       return false;
     } on DioException catch (e) {
@@ -244,10 +327,12 @@ class ApiClientService {
       if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
         await clearAuthData();
       }
+      _consecutiveRefreshFailures++;
       _refreshCompleter!.complete(false);
       return false;
     } catch (e) {
       debugPrint('❌ [OSD API CLIENT] Token refresh error: $e');
+      _consecutiveRefreshFailures++;
       _refreshCompleter!.complete(false);
       return false;
     } finally {
@@ -434,6 +519,20 @@ class _AuthInterceptor extends Interceptor {
 
   _AuthInterceptor(this._apiClient);
 
+  /// 認証エンドポイントかどうかを判定
+  static const List<String> _authEndpoints = [
+    '/api/auth/login',
+    '/api/auth/signup',
+    '/api/auth/refresh',
+    '/api/auth/logout',
+    '/api/auth/reset-password',
+    '/api/auth/google-native',
+  ];
+
+  bool _isAuthEndpoint(String path) {
+    return _authEndpoints.any((endpoint) => path.contains(endpoint));
+  }
+
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
@@ -445,6 +544,20 @@ class _AuthInterceptor extends Interceptor {
     // Add request ID for tracing
     final requestId = const Uuid().v4();
     options.headers[ApiHeaders.xRequestId] = requestId;
+
+    // P4: 認証エンドポイント以外で期限切れ or 期限間近なら事前リフレッシュ
+    if (!_isAuthEndpoint(options.path)) {
+      try {
+        final isExpired = await _apiClient.isTokenExpired();
+        final isExpiringSoon = await _apiClient.isTokenExpiringSoon();
+        if (isExpired || isExpiringSoon) {
+          debugPrint('🔄 [OSD API CLIENT] Token expiring soon, pre-refreshing...');
+          await _apiClient.refreshAuthToken();
+        }
+      } catch (e) {
+        debugPrint('⚠️ [OSD API CLIENT] Token expiry check failed: $e');
+      }
+    }
 
     // Add auth token if available
     final token = await _apiClient.getAuthToken();
@@ -459,8 +572,27 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final requestPath = err.requestOptions.path;
+
+    // 認証エンドポイントの 401 はリフレッシュをスキップ
+    if (_isAuthEndpoint(requestPath)) {
+      debugPrint(
+          '⚠️ [OSD API CLIENT] Auth endpoint error, skipping recovery: $requestPath');
+      handler.next(err);
+      return;
+    }
+
     // Handle 401 Unauthorized - attempt token refresh
     if (err.response?.statusCode == 401) {
+      // P2: リトライ済みなら再試行しない
+      if (err.requestOptions.extra['_authRetried'] == true) {
+        debugPrint(
+            '❌ [OSD API CLIENT] Already retried after refresh, not retrying again');
+        await _apiClient.handleSessionExpired();
+        handler.next(err);
+        return;
+      }
+
       try {
         debugPrint(
             '🔄 [OSD API CLIENT] Attempting auth recovery for 401 error');
@@ -474,6 +606,7 @@ class _AuthInterceptor extends Interceptor {
           if (newToken != null) {
             final retryOptions = err.requestOptions;
             retryOptions.headers[ApiHeaders.authorization] = 'Bearer $newToken';
+            retryOptions.extra['_authRetried'] = true; // P2: リトライ済みフラグ
 
             final retryResponse = await _apiClient._dio.fetch(retryOptions);
             handler.resolve(retryResponse);
@@ -483,10 +616,10 @@ class _AuthInterceptor extends Interceptor {
 
         debugPrint(
             '❌ [OSD API CLIENT] All auth recovery strategies failed, clearing auth data');
-        await _apiClient.clearAuthData();
+        await _apiClient.handleSessionExpired();
       } catch (recoveryError) {
         debugPrint('❌ [OSD API CLIENT] Auth recovery error: $recoveryError');
-        await _apiClient.clearAuthData();
+        await _apiClient.handleSessionExpired();
       }
     }
 
