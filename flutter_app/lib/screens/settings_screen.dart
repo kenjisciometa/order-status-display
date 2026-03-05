@@ -1,3 +1,4 @@
+import 'dart:io' show Platform, exit;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/settings_service.dart';
@@ -299,6 +300,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+
+          // Exit App button (Linux only)
+          if (Platform.isLinux) ...[
+            const SizedBox(height: 16),
+            Center(
+              child: SizedBox(
+                width: 300,
+                child: ElevatedButton.icon(
+                  onPressed: _handleExitApp,
+                  icon: const Icon(Icons.power_settings_new, size: 28),
+                  label: const Text(
+                    'Exit App',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey.shade800,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: OsdLayout.settingsSectionGap),
 
@@ -1606,6 +1633,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
           (route) => false,
         );
       }
+    }
+  }
+
+  Future<void> _handleExitApp() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF16213E),
+        title: const Text(
+          'Exit App',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to exit the application?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey.shade800,
+            ),
+            child: const Text('Exit'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      exit(0);
     }
   }
 }
