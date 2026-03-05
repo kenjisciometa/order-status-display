@@ -17,6 +17,9 @@ import 'services/audio_service.dart';
 import 'services/device_control_service.dart';
 import 'services/auth_service.dart';
 
+/// グローバルナビゲーターキー（セッション期限切れ時のナビゲーション用）
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -203,6 +206,7 @@ class OSDApp extends StatelessWidget {
         builder: (context, settingsService, child) {
           final isDarkMode = settingsService.isDarkMode;
           return MaterialApp(
+            navigatorKey: navigatorKey,
             title: 'Order Status Display',
             theme: isDarkMode ? _buildDarkTheme() : _buildLightTheme(),
             home: const InitialScreen(),
@@ -237,6 +241,8 @@ class _InitialScreenState extends State<InitialScreen> {
         SystemUiMode.immersiveSticky,
         overlays: [],
       );
+
+      _setupSessionExpiredHandler();
 
       debugPrint('*** OSD MAIN: Initializing auth service...');
 
@@ -336,6 +342,41 @@ class _InitialScreenState extends State<InitialScreen> {
     // Kiosk mode with no credentials configured - show setup
     debugPrint('*** OSD MAIN: Kiosk mode with no credentials, showing initial setup');
     return true;
+  }
+
+  void _setupSessionExpiredHandler() {
+    ApiClientService.instance.onSessionExpired = () {
+      AuthService.instance.handleSessionExpired();
+
+      final context = navigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          title: const Row(children: [
+            Icon(Icons.lock_outline, color: Colors.orange),
+            SizedBox(width: 12),
+            Expanded(child: Text('Session Expired')),
+          ]),
+          content: const Text(
+            'Your login session has ended. The system will attempt to reconnect.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                navigatorKey.currentState?.pushReplacement(
+                  MaterialPageRoute(builder: (_) => const InitialScreen()),
+                );
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    };
   }
 
   @override
