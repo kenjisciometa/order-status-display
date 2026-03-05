@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Sciometa OSD
+Comment=Order Status Display for restaurants
+Exec=osd_app
+Icon=com.sciometa.osd
+Categories=Office;Finance;
+Terminal=false
+StartupNotify=true

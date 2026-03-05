@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, exit;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/auth_service.dart';
@@ -169,6 +169,33 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _confirmAndExitApp() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exit App'),
+        content: const Text('Are you sure you want to exit the application?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            child: Text(
+              'Exit App',
+              style: TextStyle(color: Colors.grey.shade800),
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      exit(0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -240,6 +267,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
+
+                    // Exit App Button (Linux only)
+                    if (Platform.isLinux) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: 300,
+                        child: ElevatedButton.icon(
+                          onPressed: _confirmAndExitApp,
+                          icon: const Icon(Icons.power_settings_new),
+                          label: const Text('Exit App'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey.shade800,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -323,6 +367,42 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         children: [
           _buildEmailLoginCard(),
+
+          // Desktop notice for Google Sign-In users
+          if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE3F2FD),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF90CAF9),
+                ),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: Color(0xFF1565C0),
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'If you have been using Google Sign-In with SciPOS, please set a password in your SciPOS account settings first, then use it to log in here.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF0D47A1),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           if (Platform.isAndroid) ...[
             const SizedBox(height: 16),
