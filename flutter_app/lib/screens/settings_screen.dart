@@ -7,6 +7,10 @@ import '../services/audio_service.dart';
 import '../services/device_control_service.dart';
 import '../services/api_client_service.dart';
 import '../services/osd_websocket_service.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
+import '../core/theme/app_layout.dart';
+import '../core/theme/app_icons.dart';
 import 'login_screen.dart';
 
 /// Settings Screen
@@ -59,31 +63,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
-        toolbarHeight: 80,
+        toolbarHeight: OsdLayout.settingsAppBarHeight,
         title: const Text(
           'Settings',
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: OsdTypography.fontSize32, fontWeight: OsdTypography.weightBold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, size: 32),
+          icon: const Icon(Icons.arrow_back, size: OsdIconSizes.size32),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           // Connection Status indicator
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: OsdSpacing.space8),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space12, vertical: OsdSpacing.space6),
               decoration: BoxDecoration(
                 color: webSocketService.isConnected
                     ? const Color(0xFF4CAF50).withOpacity(0.2)
                     : const Color(0xFFF44336).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: OsdRadius.borderRadiusXl,
                 border: Border.all(
                   color: webSocketService.isConnected
                       ? const Color(0xFF4CAF50)
                       : const Color(0xFFF44336),
-                  width: 2,
+                  width: OsdSpacing.space2,
                 ),
               ),
               child: Row(
@@ -94,17 +98,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: webSocketService.isConnected
                         ? const Color(0xFF4CAF50)
                         : const Color(0xFFF44336),
-                    size: 24,
+                    size: OsdIconSizes.size24,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: OsdSpacing.space8),
                   Text(
                     webSocketService.isConnected ? 'Connected' : 'Disconnected',
                     style: TextStyle(
                       color: webSocketService.isConnected
                           ? const Color(0xFF4CAF50)
                           : const Color(0xFFF44336),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontSize: OsdTypography.fontSize18,
+                      fontWeight: OsdTypography.weightBold,
                     ),
                   ),
                 ],
@@ -113,23 +117,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           // Logout button
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: OsdSpacing.space16),
             child: TextButton.icon(
               onPressed: _handleLogout,
-              icon: const Icon(Icons.logout, color: Color(0xFFF44336), size: 28),
+              icon: const Icon(Icons.logout, color: Color(0xFFF44336), size: OsdIconSizes.size28),
               label: const Text(
                 'Logout',
                 style: TextStyle(
                   color: Color(0xFFF44336),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontSize: OsdTypography.fontSize20,
+                  fontWeight: OsdTypography.weightBold,
                 ),
               ),
               style: TextButton.styleFrom(
                 backgroundColor: const Color(0xFFF44336).withOpacity(0.1),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space16, vertical: OsdSpacing.space8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: OsdRadius.borderRadiusMd,
                 ),
               ),
             ),
@@ -137,13 +141,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(OsdLayout.settingsListPadding),
         children: [
           // Row 1: Auto Login Settings (moved to top)
           _buildSectionHeader('AUTO LOGIN SETTINGS'),
           _buildAutoLoginSection(),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: OsdLayout.settingsSectionGap),
 
           // Row 2: Device Info & Appearance
           Row(
@@ -165,7 +169,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: OsdLayout.settingsSectionGap),
 
           // Row 2: Device Control (2 components in 1 row)
           _buildSectionHeader('DEVICE CONTROL'),
@@ -187,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   isDarkMode: isDarkMode,
                 ),
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: OsdLayout.settingsSectionGap),
               Expanded(
                 child: _buildSliderTile(
                   title: 'Screen Brightness',
@@ -199,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: OsdLayout.settingsSectionGap),
 
           // Row 4: Display Settings (full width - complex section)
           _buildSectionHeader('DISPLAY SETTINGS'),
@@ -213,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: OsdLayout.settingsSectionGap),
               Expanded(
                 child: Column(
                   children: [
@@ -238,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: OsdLayout.settingsSectionGap),
 
           // Row 6: Sound Settings (full width - 2 columns)
           _buildSectionHeader('SOUND SETTINGS'),
@@ -261,7 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: OsdLayout.settingsSectionGap),
               Expanded(
                 child: Column(
                   children: [
@@ -272,7 +276,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: OsdSpacing.space32),
 
           // Logout button at bottom
           Center(
@@ -280,17 +284,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 300,
               child: ElevatedButton.icon(
                 onPressed: _handleLogout,
-                icon: const Icon(Icons.logout, size: 28),
+                icon: const Icon(Icons.logout, size: OsdIconSizes.size28),
                 label: const Text(
                   'Logout',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: OsdTypography.fontSize24, fontWeight: OsdTypography.weightBold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF44336),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space32, vertical: OsdSpacing.space16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: OsdRadius.borderRadiusLg,
                   ),
                 ),
               ),
@@ -323,14 +327,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
 
-          const SizedBox(height: 24),
+          const SizedBox(height: OsdLayout.settingsSectionGap),
 
           // Version info
           Center(
             child: Text(
               'Sciometa OSD v1.0.0',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: OsdTypography.fontSize18,
                 color: Colors.grey.shade500,
               ),
             ),
@@ -342,14 +346,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: OsdSpacing.space16),
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
+          fontSize: OsdTypography.fontSize24,
+          fontWeight: OsdTypography.weightBold,
           color: Color(0xFF2196F3),
-          letterSpacing: 1.5,
+          letterSpacing: OsdTypography.letterSpacing15,
         ),
       ),
     );
@@ -359,7 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         border: Border.all(
           color: isDarkMode
               ? const Color(0xFF00D9FF).withOpacity(0.2)
@@ -374,14 +378,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildInfoRow(String label, String value, bool isDarkMode, {Color? valueColor}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: OsdLayout.settingsCardPadding, vertical: OsdSpacing.space16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: OsdTypography.fontSize22,
               color: isDarkMode
                   ? Colors.white.withOpacity(0.7)
                   : Colors.grey.shade600,
@@ -391,8 +395,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               value,
               style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
+                fontSize: OsdTypography.fontSize22,
+                fontWeight: OsdTypography.weightMedium,
                 color: valueColor ?? (isDarkMode ? Colors.white : const Color(0xFF1A1A2E)),
               ),
               overflow: TextOverflow.ellipsis,
@@ -411,27 +415,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required bool isDarkMode,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: OsdLayout.settingsCardMarginBottom),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: isDarkMode
             ? null
             : Border.all(color: Colors.grey.shade300),
       ),
       child: SwitchListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: OsdLayout.settingsCardPadding, vertical: OsdSpacing.space8),
         title: Text(
           title,
           style: TextStyle(
-            fontSize: 26,
+            fontSize: OsdTypography.fontSize26,
             color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: OsdTypography.fontSize18,
             color: isDarkMode
                 ? Colors.white.withOpacity(0.6)
                 : Colors.grey.shade600,
@@ -441,7 +445,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onChanged: onChanged,
         activeColor: const Color(0xFF2196F3),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: OsdRadius.borderRadiusLg,
         ),
       ),
     );
@@ -454,11 +458,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required bool isDarkMode,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: OsdLayout.settingsCardMarginBottom),
+      padding: const EdgeInsets.all(OsdLayout.settingsCardPadding),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: isDarkMode
             ? null
             : Border.all(color: Colors.grey.shade300),
@@ -472,15 +476,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: OsdTypography.fontSize26,
                   color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
                 ),
               ),
               Text(
                 '${(value * 100).round()}%',
                 style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: OsdTypography.fontSize24,
+                  fontWeight: OsdTypography.weightBold,
                   color: isDarkMode
                       ? Colors.white.withOpacity(0.7)
                       : Colors.grey.shade600,
@@ -488,11 +492,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: OsdSpacing.space12),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
-              trackHeight: 8,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: OsdSpacing.space14),
+              trackHeight: OsdSpacing.space8,
             ),
             child: Slider(
               value: value,
@@ -509,11 +513,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Build Sound Type selector with Test Sound button inside
   Widget _buildSoundTypeSelectorWithTest(SettingsService settingsService, bool isDarkMode) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: OsdLayout.settingsCardMarginBottom),
+      padding: const EdgeInsets.all(OsdLayout.settingsCardPadding),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: isDarkMode
             ? null
             : Border.all(color: Colors.grey.shade300),
@@ -527,43 +531,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 'Sound Type',
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: OsdTypography.fontSize26,
                   color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
                 ),
               ),
               // Test Sound button
               ElevatedButton.icon(
                 onPressed: () => AudioService.instance.playOrderReadySound(),
-                icon: const Icon(Icons.play_arrow, size: 24),
+                icon: const Icon(Icons.play_arrow, size: OsdIconSizes.size24),
                 label: const Text(
                   'Test',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: OsdTypography.fontSize18, fontWeight: OsdTypography.weightBold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00D9FF),
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space16, vertical: OsdSpacing.space8),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: OsdRadius.borderRadiusR10,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: OsdSpacing.space6),
           Text(
             'Select notification sound for ready orders',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: OsdTypography.fontSize18,
               color: isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
                   : Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: OsdSpacing.space16),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: OsdSpacing.space12,
+            runSpacing: OsdSpacing.space12,
             children: ReadySoundType.values.map((type) {
               final isSelected = settingsService.readySoundType == type;
               return InkWell(
@@ -572,18 +576,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Play the sound when selected
                   AudioService.instance.playSoundType(type);
                 },
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: OsdRadius.borderRadiusMd,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space24, vertical: OsdSpacing.space16),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
                         : (isDarkMode
                             ? Colors.white.withValues(alpha: 0.05)
                             : Colors.grey.shade100),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: OsdRadius.borderRadiusMd,
                     border: isSelected
-                        ? Border.all(color: const Color(0xFF00D9FF), width: 2)
+                        ? Border.all(color: const Color(0xFF00D9FF), width: OsdSpacing.space2)
                         : Border.all(color: isDarkMode
                             ? Colors.white.withValues(alpha: 0.1)
                             : Colors.grey.shade300),
@@ -593,17 +597,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Icon(
                         _getSoundIcon(type),
-                        size: 28,
+                        size: OsdIconSizes.size28,
                         color: isSelected
                             ? const Color(0xFF00D9FF)
                             : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: OsdSpacing.space12),
                       Text(
                         type.displayName,
                         style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontSize: OsdTypography.fontSize22,
+                          fontWeight: isSelected ? OsdTypography.weightBold : OsdTypography.weightNormal,
                           color: isSelected
                               ? const Color(0xFF00D9FF)
                               : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
@@ -645,11 +649,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: OsdLayout.settingsCardMarginBottom),
+      padding: const EdgeInsets.all(OsdLayout.settingsCardPadding),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: isDarkMode
             ? null
             : Border.all(color: Colors.grey.shade300),
@@ -660,41 +664,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'Ready Order Highlight Duration',
             style: TextStyle(
-              fontSize: 26,
+              fontSize: OsdTypography.fontSize26,
               color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: OsdSpacing.space6),
           Text(
             'Duration to highlight newly ready orders',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: OsdTypography.fontSize18,
               color: isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
                   : Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: OsdSpacing.space16),
           Row(
             children: options.map((option) {
               final isSelected = currentSeconds == option.$1;
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space4),
                   child: InkWell(
                     onTap: () => settingsService.setHighlightDurationSeconds(option.$1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: OsdRadius.borderRadiusR10,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: OsdSpacing.space14),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
                             : (isDarkMode
                                 ? Colors.white.withValues(alpha: 0.05)
                                 : Colors.grey.shade100),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: OsdRadius.borderRadiusR10,
                         border: isSelected
-                            ? Border.all(color: const Color(0xFF00D9FF), width: 2)
+                            ? Border.all(color: const Color(0xFF00D9FF), width: OsdSpacing.space2)
                             : Border.all(color: isDarkMode
                                 ? Colors.white.withValues(alpha: 0.1)
                                 : Colors.grey.shade300),
@@ -703,8 +707,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Text(
                           option.$2,
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: OsdTypography.fontSize20,
+                            fontWeight: isSelected ? OsdTypography.weightBold : OsdTypography.weightNormal,
                             color: isSelected
                                 ? const Color(0xFF00D9FF)
                                 : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
@@ -725,11 +729,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Build Primary Display Type selector (F-009)
   Widget _buildPrimaryDisplayTypeSelector(SettingsService settingsService, bool isDarkMode) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: OsdLayout.settingsCardMarginBottom),
+      padding: const EdgeInsets.all(OsdLayout.settingsCardPadding),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: isDarkMode
             ? null
             : Border.all(color: Colors.grey.shade300),
@@ -740,21 +744,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'Display Number Type',
             style: TextStyle(
-              fontSize: 26,
+              fontSize: OsdTypography.fontSize26,
               color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: OsdSpacing.space6),
           Text(
             'Select the number type to display on cards',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: OsdTypography.fontSize18,
               color: isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
                   : Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: OsdSpacing.space16),
           _buildDisplayTypeOption(
             settingsService,
             PrimaryDisplayType.callNumber,
@@ -795,17 +799,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isSelected = settingsService.primaryDisplayType == type;
     return InkWell(
       onTap: () => settingsService.setPrimaryDisplayType(type),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: OsdRadius.borderRadiusMd,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space16, vertical: OsdSpacing.space14),
+        margin: const EdgeInsets.only(bottom: OsdSpacing.space8),
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF00D9FF).withValues(alpha: 0.2)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: OsdRadius.borderRadiusMd,
           border: isSelected
-              ? Border.all(color: const Color(0xFF00D9FF), width: 2)
+              ? Border.all(color: const Color(0xFF00D9FF), width: OsdSpacing.space2)
               : null,
         ),
         child: Row(
@@ -815,9 +819,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: isSelected
                   ? const Color(0xFF00D9FF)
                   : (isDarkMode ? Colors.white54 : Colors.grey.shade600),
-              size: 32,
+              size: OsdIconSizes.size32,
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: OsdSpacing.space16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -825,8 +829,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: OsdTypography.fontSize22,
+                      fontWeight: isSelected ? OsdTypography.weightBold : OsdTypography.weightNormal,
                       color: isSelected
                           ? const Color(0xFF00D9FF)
                           : (isDarkMode ? Colors.white : const Color(0xFF1A1A2E)),
@@ -835,7 +839,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: OsdTypography.fontSize16,
                       color: isDarkMode
                           ? Colors.white.withValues(alpha: 0.5)
                           : Colors.grey.shade600,
@@ -848,7 +852,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Icon(
                 Icons.check_circle,
                 color: Color(0xFF00D9FF),
-                size: 28,
+                size: OsdIconSizes.size28,
               ),
           ],
         ),
@@ -863,10 +867,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (_isLoadingAutoLogin) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(OsdLayout.settingsCardPadding),
         decoration: BoxDecoration(
           color: const Color(0xFF16213E),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: OsdRadius.borderRadiusLg,
         ),
         child: const Center(
           child: CircularProgressIndicator(
@@ -877,10 +881,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(OsdLayout.settingsCardPadding),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF16213E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         border: Border.all(
           color: isDarkMode
               ? const Color(0xFF00D9FF).withOpacity(0.2)
@@ -898,9 +902,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: _isAutoLoginEnabled
                     ? const Color(0xFF4CAF50)
                     : const Color(0xFFF44336),
-                size: 28,
+                size: OsdIconSizes.size28,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: OsdSpacing.space12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -908,8 +912,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       _isAutoLoginEnabled ? 'Auto Login Enabled' : 'Auto Login Disabled',
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontSize: OsdTypography.fontSize22,
+                        fontWeight: OsdTypography.weightBold,
                         color: isDarkMode ? Colors.white : const Color(0xFF1A1A2E),
                       ),
                     ),
@@ -917,7 +921,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text(
                         'Account: $_storedEmail',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: OsdTypography.fontSize16,
                           color: isDarkMode
                               ? Colors.white.withOpacity(0.6)
                               : Colors.grey.shade600,
@@ -929,7 +933,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: OsdSpacing.space20),
 
           // Description
           Text(
@@ -937,52 +941,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ? 'The app will automatically log in with the saved credentials when started.'
                 : 'Enable auto login to automatically sign in when the app starts.',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: OsdTypography.fontSize16,
               color: isDarkMode
                   ? Colors.white.withOpacity(0.7)
                   : Colors.grey.shade700,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: OsdSpacing.space20),
 
           // Action buttons
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: OsdSpacing.space12,
+            runSpacing: OsdSpacing.space12,
             children: [
               if (_isAutoLoginEnabled) ...[
                 // Change credentials button
                 ElevatedButton.icon(
                   onPressed: () => _showChangeCredentialsDialog(),
-                  icon: const Icon(Icons.edit, size: 20),
+                  icon: const Icon(Icons.edit, size: OsdIconSizes.size20),
                   label: const Text(
                     'Change Credentials',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: OsdTypography.fontSize16, fontWeight: OsdTypography.weightBold),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00D9FF),
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space20, vertical: OsdSpacing.space12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: OsdRadius.borderRadiusR10,
                     ),
                   ),
                 ),
                 // Disable auto login button
                 OutlinedButton.icon(
                   onPressed: () => _showDisableAutoLoginDialog(),
-                  icon: const Icon(Icons.power_settings_new, size: 20),
+                  icon: const Icon(Icons.power_settings_new, size: OsdIconSizes.size20),
                   label: const Text(
                     'Disable Auto Login',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: OsdTypography.fontSize16, fontWeight: OsdTypography.weightBold),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFF44336),
                     side: const BorderSide(color: Color(0xFFF44336)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space20, vertical: OsdSpacing.space12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: OsdRadius.borderRadiusR10,
                     ),
                   ),
                 ),
@@ -990,17 +994,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // Enable auto login button
                 ElevatedButton.icon(
                   onPressed: () => _showEnableAutoLoginDialog(),
-                  icon: const Icon(Icons.login, size: 20),
+                  icon: const Icon(Icons.login, size: OsdIconSizes.size20),
                   label: const Text(
                     'Enable Auto Login',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: OsdTypography.fontSize16, fontWeight: OsdTypography.weightBold),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00D9FF),
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space20, vertical: OsdSpacing.space12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: OsdRadius.borderRadiusR10,
                     ),
                   ),
                 ),
@@ -1017,191 +1021,240 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final scrollController = ScrollController();
+    final emailFocusNode = FocusNode();
+    final passwordFocusNode = FocusNode();
     bool isLoading = false;
     bool obscurePassword = true;
     String? errorMessage;
+
+    // Helper to scroll to focused field
+    void scrollToFocused() {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (scrollController.hasClients) {
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+
+    emailFocusNode.addListener(() {
+      if (emailFocusNode.hasFocus) scrollToFocused();
+    });
+    passwordFocusNode.addListener(() {
+      if (passwordFocusNode.hasFocus) scrollToFocused();
+    });
 
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) => Dialog(
           backgroundColor: const Color(0xFF16213E),
-          title: const Row(
-            children: [
-              Icon(Icons.login, color: Color(0xFF00D9FF)),
-              SizedBox(width: 12),
-              Text(
-                'Enable Auto Login',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
+          shape: RoundedRectangleBorder(
+            borderRadius: OsdRadius.borderRadiusLg,
           ),
-          content: SizedBox(
-            width: 400,
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Enter credentials to save for automatic login.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration(
-                      'Password',
-                      Icons.lock_outlined,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: Colors.white54,
-                        ),
-                        onPressed: () {
-                          setDialogState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF44336).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            color: Color(0xFFF44336),
-                            size: 20,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: OsdLayout.dialogMaxWidth, maxHeight: OsdLayout.dialogMaxHeight),
+            child: SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(OsdLayout.dialogPadding),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    const Row(
+                      children: [
+                        Icon(Icons.login, color: Color(0xFF00D9FF)),
+                        SizedBox(width: OsdSpacing.space12),
+                        Text(
+                          'Enable Auto Login',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: OsdTypography.fontSize20,
+                            fontWeight: OsdTypography.weightBold,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              errorMessage!,
-                              style: const TextStyle(
-                                color: Color(0xFFF44336),
-                                fontSize: 14,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: OsdSpacing.space16),
+                    Text(
+                      'Enter credentials to save for automatic login.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: OsdTypography.fontSize14,
+                      ),
+                    ),
+                    const SizedBox(height: OsdSpacing.space20),
+                    TextFormField(
+                      controller: emailController,
+                      focusNode: emailFocusNode,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: OsdSpacing.space16),
+                    TextFormField(
+                      controller: passwordController,
+                      focusNode: passwordFocusNode,
+                      obscureText: obscurePassword,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration(
+                        'Password',
+                        Icons.lock_outlined,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.white54,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: OsdSpacing.space16),
+                      Container(
+                        padding: const EdgeInsets.all(OsdSpacing.space12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF44336).withOpacity(0.2),
+                          borderRadius: OsdRadius.borderRadiusBase,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Color(0xFFF44336),
+                              size: OsdIconSizes.size20,
+                            ),
+                            const SizedBox(width: OsdSpacing.space8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: Color(0xFFF44336),
+                                  fontSize: OsdTypography.fontSize14,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: OsdSpacing.space24),
+                    // Action buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: OsdSpacing.space12),
+                        ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+
+                                  setDialogState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                  });
+
+                                  // Test credentials
+                                  final authService = AuthService.instance;
+                                  final result = await authService.signInWithEmailPassword(
+                                    email: emailController.text.trim(),
+                                    password: passwordController.text,
+                                    rememberMe: true,
+                                  );
+
+                                  if (result.isAuthenticated) {
+                                    // Save credentials
+                                    final apiClient = ApiClientService.instance;
+                                    await apiClient.setAutoLoginEnabled(true);
+                                    await apiClient.storeCredentials(
+                                      emailController.text.trim(),
+                                      passwordController.text,
+                                    );
+
+                                    Navigator.of(context).pop();
+
+                                    // Refresh state
+                                    await _loadAutoLoginSettings();
+
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(this.context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Auto login enabled successfully'),
+                                          backgroundColor: Color(0xFF4CAF50),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      errorMessage = result.errorMessage ?? 'Invalid credentials';
+                                    });
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00D9FF),
+                            foregroundColor: Colors.black,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: OsdSpacing.space20,
+                                  height: OsdSpacing.space20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: OsdSpacing.space2,
+                                    color: Colors.black,
+                                  ),
+                                )
+                              : const Text('Enable'),
+                        ),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-
-                      setDialogState(() {
-                        isLoading = true;
-                        errorMessage = null;
-                      });
-
-                      // Test credentials
-                      final authService = AuthService.instance;
-                      final result = await authService.signInWithEmailPassword(
-                        email: emailController.text.trim(),
-                        password: passwordController.text,
-                        rememberMe: true,
-                      );
-
-                      if (result.isAuthenticated) {
-                        // Save credentials
-                        final apiClient = ApiClientService.instance;
-                        await apiClient.setAutoLoginEnabled(true);
-                        await apiClient.storeCredentials(
-                          emailController.text.trim(),
-                          passwordController.text,
-                        );
-
-                        Navigator.of(context).pop();
-
-                        // Refresh state
-                        await _loadAutoLoginSettings();
-
-                        if (mounted) {
-                          ScaffoldMessenger.of(this.context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Auto login enabled successfully'),
-                              backgroundColor: Color(0xFF4CAF50),
-                            ),
-                          );
-                        }
-                      } else {
-                        setDialogState(() {
-                          isLoading = false;
-                          errorMessage = result.errorMessage ?? 'Invalid credentials';
-                        });
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D9FF),
-                foregroundColor: Colors.black,
-              ),
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : const Text('Enable'),
-            ),
-          ],
         ),
       ),
     );
+
+    // Clean up
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+    scrollController.dispose();
   }
 
   /// Show dialog to change auto login credentials
@@ -1212,192 +1265,241 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final emailController = TextEditingController(text: currentEmail);
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final scrollController = ScrollController();
+    final emailFocusNode = FocusNode();
+    final passwordFocusNode = FocusNode();
     bool isLoading = false;
     bool obscurePassword = true;
     String? errorMessage;
 
     if (!mounted) return;
 
+    // Helper to scroll to focused field
+    void scrollToFocused() {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (scrollController.hasClients) {
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+
+    emailFocusNode.addListener(() {
+      if (emailFocusNode.hasFocus) scrollToFocused();
+    });
+    passwordFocusNode.addListener(() {
+      if (passwordFocusNode.hasFocus) scrollToFocused();
+    });
+
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) => Dialog(
           backgroundColor: const Color(0xFF16213E),
-          title: const Row(
-            children: [
-              Icon(Icons.edit, color: Color(0xFF00D9FF)),
-              SizedBox(width: 12),
-              Text(
-                'Change Credentials',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
+          shape: RoundedRectangleBorder(
+            borderRadius: OsdRadius.borderRadiusLg,
           ),
-          content: SizedBox(
-            width: 400,
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Enter new credentials for automatic login.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration('Email', Icons.email_outlined),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _dialogInputDecoration(
-                      'Password',
-                      Icons.lock_outlined,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: Colors.white54,
-                        ),
-                        onPressed: () {
-                          setDialogState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF44336).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            color: Color(0xFFF44336),
-                            size: 20,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: OsdLayout.dialogMaxWidth, maxHeight: OsdLayout.dialogMaxHeight),
+            child: SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(OsdLayout.dialogPadding),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    const Row(
+                      children: [
+                        Icon(Icons.edit, color: Color(0xFF00D9FF)),
+                        SizedBox(width: OsdSpacing.space12),
+                        Text(
+                          'Change Credentials',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: OsdTypography.fontSize20,
+                            fontWeight: OsdTypography.weightBold,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              errorMessage!,
-                              style: const TextStyle(
-                                color: Color(0xFFF44336),
-                                fontSize: 14,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: OsdSpacing.space16),
+                    Text(
+                      'Enter new credentials for automatic login.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: OsdTypography.fontSize14,
+                      ),
+                    ),
+                    const SizedBox(height: OsdSpacing.space20),
+                    TextFormField(
+                      controller: emailController,
+                      focusNode: emailFocusNode,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration('Email', Icons.email_outlined),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: OsdSpacing.space16),
+                    TextFormField(
+                      controller: passwordController,
+                      focusNode: passwordFocusNode,
+                      obscureText: obscurePassword,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _dialogInputDecoration(
+                        'Password',
+                        Icons.lock_outlined,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.white54,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: OsdSpacing.space16),
+                      Container(
+                        padding: const EdgeInsets.all(OsdSpacing.space12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF44336).withOpacity(0.2),
+                          borderRadius: OsdRadius.borderRadiusBase,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Color(0xFFF44336),
+                              size: OsdIconSizes.size20,
+                            ),
+                            const SizedBox(width: OsdSpacing.space8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: Color(0xFFF44336),
+                                  fontSize: OsdTypography.fontSize14,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: OsdSpacing.space24),
+                    // Action buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: OsdSpacing.space12),
+                        ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+
+                                  setDialogState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                  });
+
+                                  // Test new credentials
+                                  final authService = AuthService.instance;
+                                  final result = await authService.signInWithEmailPassword(
+                                    email: emailController.text.trim(),
+                                    password: passwordController.text,
+                                    rememberMe: true,
+                                  );
+
+                                  if (result.isAuthenticated) {
+                                    // Update stored credentials
+                                    final apiClient = ApiClientService.instance;
+                                    await apiClient.storeCredentials(
+                                      emailController.text.trim(),
+                                      passwordController.text,
+                                    );
+
+                                    Navigator.of(context).pop();
+
+                                    // Refresh state
+                                    await _loadAutoLoginSettings();
+
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(this.context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Credentials updated successfully'),
+                                          backgroundColor: Color(0xFF4CAF50),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      errorMessage = result.errorMessage ?? 'Invalid credentials';
+                                    });
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00D9FF),
+                            foregroundColor: Colors.black,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: OsdSpacing.space20,
+                                  height: OsdSpacing.space20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: OsdSpacing.space2,
+                                    color: Colors.black,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-
-                      setDialogState(() {
-                        isLoading = true;
-                        errorMessage = null;
-                      });
-
-                      // Test new credentials
-                      final authService = AuthService.instance;
-                      final result = await authService.signInWithEmailPassword(
-                        email: emailController.text.trim(),
-                        password: passwordController.text,
-                        rememberMe: true,
-                      );
-
-                      if (result.isAuthenticated) {
-                        // Update stored credentials
-                        final apiClient = ApiClientService.instance;
-                        await apiClient.storeCredentials(
-                          emailController.text.trim(),
-                          passwordController.text,
-                        );
-
-                        Navigator.of(context).pop();
-
-                        // Refresh state
-                        await _loadAutoLoginSettings();
-
-                        if (mounted) {
-                          ScaffoldMessenger.of(this.context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Credentials updated successfully'),
-                              backgroundColor: Color(0xFF4CAF50),
-                            ),
-                          );
-                        }
-                      } else {
-                        setDialogState(() {
-                          isLoading = false;
-                          errorMessage = result.errorMessage ?? 'Invalid credentials';
-                        });
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D9FF),
-                foregroundColor: Colors.black,
-              ),
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : const Text('Save'),
-            ),
-          ],
         ),
       ),
     );
+
+    // Clean up
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+    scrollController.dispose();
   }
 
   /// Show dialog to disable auto login
@@ -1409,7 +1511,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Row(
           children: [
             Icon(Icons.warning, color: Color(0xFFFF9800)),
-            SizedBox(width: 12),
+            SizedBox(width: OsdSpacing.space12),
             Text(
               'Disable Auto Login',
               style: TextStyle(color: Colors.white),
@@ -1465,27 +1567,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
       filled: true,
       fillColor: const Color(0xFF0F3460),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: const BorderSide(
           color: Color(0xFF00D9FF),
-          width: 2,
+          width: OsdLayout.inputFocusBorderWidth,
         ),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: const BorderSide(
           color: Color(0xFFF44336),
         ),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OsdRadius.borderRadiusMd,
         borderSide: const BorderSide(
           color: Color(0xFFF44336),
-          width: 2,
+          width: OsdLayout.inputFocusBorderWidth,
         ),
       ),
     );

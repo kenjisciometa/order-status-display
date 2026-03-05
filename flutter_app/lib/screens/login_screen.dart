@@ -1,6 +1,10 @@
 import 'dart:io' show Platform, exit;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../core/theme/app_icons.dart';
+import '../core/theme/app_layout.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
 import '../services/auth_service.dart';
 import 'display_selection_screen.dart';
 import 'order_status_screen.dart';
@@ -199,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 700;
+    final isWideScreen = screenWidth > OsdLayout.loginWideBreakpoint;
 
     return Scaffold(
       backgroundColor: const Color(0xFFBBDEFB), // Blue-200 surface (OSD theme)
@@ -207,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(OsdLayout.loginCardPadding),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -216,17 +220,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Header section (Logo + Title)
                     _buildHeader(),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: OsdSpacing.space24),
 
                     // Error message
                     if (_errorMessage != null)
                       Container(
-                        constraints: BoxConstraints(maxWidth: isWideScreen ? 700 : 400),
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
+                        constraints: BoxConstraints(
+                            maxWidth: isWideScreen
+                                ? OsdLayout.loginWideBreakpoint
+                                : OsdLayout.loginSingleColumnMaxWidth),
+                        padding: const EdgeInsets.all(OsdSpacing.space12),
+                        margin: const EdgeInsets.only(bottom: OsdSpacing.space16),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEE2E2),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: OsdRadius.borderRadiusBase,
                           border: Border.all(color: const Color(0xFFFCA5A5)),
                         ),
                         child: Row(
@@ -234,15 +241,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             const Icon(
                               Icons.error_outline,
                               color: Color(0xFFDC2626),
-                              size: 20,
+                              size: OsdIconSizes.size20,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: OsdSpacing.space8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
                                 style: const TextStyle(
                                   color: Color(0xFFDC2626),
-                                  fontSize: 14,
+                                  fontSize: OsdTypography.fontSize14,
                                 ),
                               ),
                             ),
@@ -256,13 +263,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     else
                       _buildSingleColumnLayout(),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: OsdSpacing.space24),
 
                     // Footer
                     const Text(
                       'Use your POS account to sign in',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: OsdTypography.fontSize12,
                         color: Color(0xFF9CA3AF),
                       ),
                       textAlign: TextAlign.center,
@@ -300,37 +307,37 @@ class _LoginScreenState extends State<LoginScreen> {
         // App Logo
         Image.asset(
           'assets/icons/app_icon.png',
-          width: 100,
-          height: 100,
+          width: OsdLayout.loginLogoSize,
+          height: OsdLayout.loginLogoSize,
           errorBuilder: (context, error, stackTrace) {
             return const Icon(
               Icons.monitor,
-              size: 100,
+              size: OsdLayout.loginLogoSize,
               color: Color(0xFF2196F3),
             );
           },
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: OsdSpacing.space16),
 
         // App Title
         const Text(
           'Sciometa OSD',
           style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
+            fontSize: OsdTypography.fontSize24,
+            fontWeight: OsdTypography.weightBold,
             color: Color(0xFF111827),
             letterSpacing: -0.5,
           ),
           textAlign: TextAlign.center,
         ),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: OsdSpacing.space4),
 
         const Text(
           'Order Status Display',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: OsdTypography.fontSize14,
             color: Color(0xFF6B7280),
           ),
           textAlign: TextAlign.center,
@@ -341,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildTwoColumnLayout() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 800),
+      constraints: const BoxConstraints(maxWidth: OsdLayout.loginTwoColumnMaxWidth),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -350,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: _buildEmailLoginCard(),
           ),
 
-          const SizedBox(width: 24),
+          const SizedBox(width: OsdSpacing.space24),
 
           // Right: Google Login
           Expanded(
@@ -363,7 +370,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildSingleColumnLayout() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 400),
+      constraints: const BoxConstraints(maxWidth: OsdLayout.loginSingleColumnMaxWidth),
       child: Column(
         children: [
           _buildEmailLoginCard(),
@@ -405,7 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
 
           if (Platform.isAndroid) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: OsdSpacing.space16),
 
             // Divider
             Row(
@@ -416,13 +423,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: const Color(0xFFE5E7EB),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: OsdSpacing.space16),
+                  child: const Text(
                     'or',
                     style: TextStyle(
                       color: Color(0xFF9CA3AF),
-                      fontSize: 14,
+                      fontSize: OsdTypography.fontSize14,
                     ),
                   ),
                 ),
@@ -435,7 +442,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: OsdSpacing.space16),
 
             _buildGoogleLoginCard(),
           ],
@@ -446,10 +453,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildEmailLoginCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(OsdLayout.loginCardPadding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -464,30 +471,30 @@ class _LoginScreenState extends State<LoginScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(OsdSpacing.space8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFBBDEFB),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: OsdRadius.borderRadiusBase,
                 ),
                 child: const Icon(
                   Icons.email_outlined,
                   color: Color(0xFF2196F3),
-                  size: 20,
+                  size: OsdIconSizes.size20,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: OsdSpacing.space12),
               const Text(
                 'Email Sign In',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontSize: OsdTypography.fontSize18,
+                  fontWeight: OsdTypography.weightSemibold,
                   color: Color(0xFF111827),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: OsdSpacing.space20),
 
           // Email field
           TextFormField(
@@ -496,7 +503,7 @@ class _LoginScreenState extends State<LoginScreen> {
               labelText: 'Email',
               prefixIcon: const Icon(Icons.email_outlined),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: OsdRadius.borderRadiusBase,
               ),
               filled: true,
               fillColor: const Color(0xFFF9FAFB),
@@ -514,7 +521,7 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: OsdSpacing.space16),
 
           // Password field
           TextFormField(
@@ -535,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: OsdRadius.borderRadiusBase,
               ),
               filled: true,
               fillColor: const Color(0xFFF9FAFB),
@@ -550,7 +557,7 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: OsdSpacing.space12),
 
           // Remember me checkbox
           CheckboxListTile(
@@ -564,7 +571,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
             title: const Text(
               'Auto-login next time',
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: OsdTypography.fontSize14),
             ),
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
@@ -572,27 +579,27 @@ class _LoginScreenState extends State<LoginScreen> {
             dense: true,
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: OsdSpacing.space16),
 
           // Login button
           SizedBox(
-            height: 48,
+            height: OsdLayout.buttonHeight,
             child: ElevatedButton(
               onPressed: (_isLoading || _isGoogleLoading) ? null : _handleLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2196F3),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: OsdRadius.borderRadiusBase,
                 ),
-                elevation: 2,
+                elevation: OsdElevation.level2,
               ),
               child: _isLoading
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
+                      height: OsdIconSizes.size20,
+                      width: OsdIconSizes.size20,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                        strokeWidth: OsdSpacing.space2,
                         valueColor:
                             AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
@@ -600,8 +607,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   : const Text(
                       'Sign In',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: OsdTypography.fontSize16,
+                        fontWeight: OsdTypography.weightSemibold,
                       ),
                     ),
             ),
@@ -613,10 +620,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildGoogleLoginCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(OsdLayout.loginCardPadding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OsdRadius.borderRadiusLg,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -631,55 +638,55 @@ class _LoginScreenState extends State<LoginScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(OsdSpacing.space8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEBF5FF),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: OsdRadius.borderRadiusBase,
                 ),
                 child: const Icon(
                   Icons.g_mobiledata,
                   color: Color(0xFF4285F4),
-                  size: 20,
+                  size: OsdIconSizes.size20,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: OsdSpacing.space12),
               const Text(
                 'Google Sign In',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontSize: OsdTypography.fontSize18,
+                  fontWeight: OsdTypography.weightSemibold,
                   color: Color(0xFF111827),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: OsdSpacing.space20),
 
           // Description
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(OsdSpacing.space16),
             decoration: BoxDecoration(
               color: const Color(0xFFF9FAFB),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: OsdRadius.borderRadiusBase,
               border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Quick & Secure',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontSize: OsdTypography.fontSize14,
+                    fontWeight: OsdTypography.weightSemibold,
                     color: Color(0xFF374151),
                   ),
                 ),
-                SizedBox(height: 8),
-                Text(
+                const SizedBox(height: OsdSpacing.space8),
+                const Text(
                   'Sign in with your Google account linked to your POS system. No password required.',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: OsdTypography.fontSize13,
                     color: Color(0xFF6B7280),
                     height: 1.4,
                   ),
@@ -688,11 +695,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: OsdSpacing.space20),
 
           // Google Sign-In button
           SizedBox(
-            height: 48,
+            height: OsdLayout.buttonHeight,
             child: OutlinedButton(
               onPressed: (_isLoading || _isGoogleLoading) ? null : _handleGoogleLogin,
               style: OutlinedButton.styleFrom(
@@ -701,16 +708,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Color(0xFFD1D5DB),
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: OsdRadius.borderRadiusBase,
                 ),
                 backgroundColor: Colors.white,
               ),
               child: _isGoogleLoading
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
+                      height: OsdIconSizes.size20,
+                      width: OsdIconSizes.size20,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                        strokeWidth: OsdSpacing.space2,
                         valueColor:
                             AlwaysStoppedAnimation<Color>(Color(0xFF6B7280)),
                       ),
@@ -720,22 +727,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Image.network(
                           'https://www.google.com/favicon.ico',
-                          height: 20,
-                          width: 20,
+                          height: OsdIconSizes.size20,
+                          width: OsdIconSizes.size20,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(
                               Icons.g_mobiledata,
-                              size: 24,
+                              size: OsdIconSizes.size24,
                               color: Color(0xFF4285F4),
                             );
                           },
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: OsdSpacing.space12),
                         const Text(
                           'Continue with Google',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontSize: OsdTypography.fontSize16,
+                            fontWeight: OsdTypography.weightMedium,
                           ),
                         ),
                       ],
