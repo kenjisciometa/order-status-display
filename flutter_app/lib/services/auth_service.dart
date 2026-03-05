@@ -421,6 +421,15 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  /// セッション期限切れ処理（P6）
+  /// signOut() と異なり、自動ログインクレデンシャルは維持する
+  Future<void> handleSessionExpired() async {
+    _currentUser = null;
+    _availableDisplays = [];
+    _selectedDisplay = null;
+    _updateState(const AuthState.unauthenticated('Session expired'));
+  }
+
   /// Check if auto-login is enabled
   Future<bool> isAutoLoginEnabled() async {
     return await _apiClient.isAutoLoginEnabled();
